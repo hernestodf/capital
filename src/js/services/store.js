@@ -14,7 +14,7 @@ const _state = {
   currentUser: null,
 };
 
-let _listeners = {};
+const _listeners = {};
 
 /**
  * Initialize store from PHP-injected window.* globals
