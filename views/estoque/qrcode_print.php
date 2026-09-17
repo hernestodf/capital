@@ -100,6 +100,21 @@ $qrItems = array_map(function (string $codigo) use ($qrWriter, $barcodeGenerator
     display: block;
     flex: none;
   }
+  .qr-card .barcode-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+  .qr-card .brand {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-align: center;
+    margin-bottom: 2px;
+    color: #0c1a2e;
+  }
   .qr-card .barcode-img {
     width: 3.2cm;
     height: 1.4cm;
@@ -143,7 +158,10 @@ $qrItems = array_map(function (string $codigo) use ($qrWriter, $barcodeGenerator
       <div class="qr-card">
         <div class="codes-row">
           <img class="qr-img" src="<?= $item['qrDataUri'] ?>" alt="QR <?= htmlspecialchars($item['codigo']) ?>">
-          <img class="barcode-img" src="<?= $item['barcodeDataUri'] ?>" alt="Código de barras <?= htmlspecialchars($item['codigo']) ?>">
+          <div class="barcode-col">
+            <div class="brand">CAPITAL AUDIOVISUAL</div>
+            <img class="barcode-img" src="<?= $item['barcodeDataUri'] ?>" alt="Código de barras <?= htmlspecialchars($item['codigo']) ?>">
+          </div>
         </div>
         <div class="codigo"><?= htmlspecialchars($item['codigo']) ?></div>
       </div>
