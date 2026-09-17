@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+echo "pre-commit: checando secrets..."
+if git diff --cached | grep -qE "(password|secret|api_key)[[:space:]]*=[[:space:]]*['\"][^'\"]+"; then
+  echo "Possível secret hardcoded. Revise antes de commitar."; exit 1
+fi
+exit 0

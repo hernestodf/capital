@@ -1,0 +1,54 @@
+# Dependencies
+/vendor/
+
+# Generated agents (created by composer scripts)
+/agents/
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.bak*
+.env.*.bak*
+
+# Backups anteriores de git corrompido
+.git.corrupted*/
+
+# Error log de runtime (nao e codigo-fonte)
+error_log
+
+# Logs
+/storage/logs/
+*.log
+
+# Database (dumps com dados reais/credenciais nunca vao pro git)
+/storage/*.sqlite
+/database/dump*.sql
+/database/newsisloc.sql
+/docs/extrairplanilha.sql
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Cache
+/storage/cache/
+
+# Theme
+/storage/theme.json
+
+# Temp files (mPDF, etc)
+/tmp/
+
+# Database dump completo
+/database/sisloc.sql
+
+# WhatsApp API docs (referencia, nao codigo)
+/docs/whatsapp api/.kilo/
+docs/whatsapp api/

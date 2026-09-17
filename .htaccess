@@ -1,0 +1,16 @@
+RewriteEngine On
+
+# Bloqueia diretorios internos que nunca devem ser servidos via HTTP
+RewriteRule ^(\.git|\.ai|\.kilo|database|docs|deploy|scripts|src|vendor|tests|Service|agents|bootstrap|cgi-bin|config|views|storage|tmp)(/|$) - [F,L]
+
+# Bloqueia qualquer arquivo ou pasta oculta (.env, .env.*, .htaccess, .gitignore, .git/, .ai/, etc.)
+RewriteRule (^|/)\. - [F,L]
+
+# Dentro de public/, so o index.php pode ser executado diretamente
+# (bloqueia scripts de debug/diagnostico/import avulsos deixados por engano)
+RewriteRule ^public/(?!index\.php$)[^/]+\.php$ - [F,L]
+
+# Roteamento normal da aplicacao
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php [QSA,L]

@@ -1,0 +1,272 @@
+<?php require dirname(__DIR__) . '/layout/header.php'; ?>
+
+<?php
+require_once dirname(__DIR__, 2) . '/docs/layout/branco/assets/components/table/table.php';
+require_once dirname(__DIR__, 2) . '/docs/layout/branco/assets/components/badge/badge.php';
+
+$rows = [];
+if (!empty($eventos)) {
+    foreach ($eventos as $e) {
+        // Badge estado
+        $estadoBadge = '';
+        if ($e['estado'] === 'O') {
+            $estadoBadge = renderBadge(['label' => 'Orçamento', 'variant' => 'yellow', 'size' => 'sm']);
+        } elseif ($e['estado'] === 'L') {
+            $estadoBadge = renderBadge(['label' => 'Locação', 'variant' => 'cyan', 'size' => 'sm']);
+        } elseif ($e['estado'] === 'P') {
+            $estadoBadge = renderBadge(['label' => 'Pedido', 'variant' => 'purple', 'size' => 'sm']);
+        }
+
+        // Badge status_locacao
+        $statusBadge = '';
+        $st = strtoupper(trim($e['status_locacao'] ?? ''));
+        if ($st === 'A') {
+            $statusBadge = renderBadge(['label' => 'Andamento', 'variant' => 'green', 'size' => 'sm']);
+        } elseif ($st === 'F') {
+            $statusBadge = renderBadge(['label' => 'Finalizada', 'variant' => 'purple', 'size' => 'sm']);
+        } elseif ($st === 'T') {
+            $statusBadge = renderBadge(['label' => 'Faturado', 'variant' => 'emerald', 'size' => 'sm']);
+        } else {
+            $statusBadge = renderBadge(['label' => 'Pendente', 'variant' => 'yellow', 'size' => 'sm']);
+        }
+
+        // Ações condicionais (converter + editar + excluir)
+        $acoesHtml = '';
+        if ($e['estado'] === 'O') {
+            $acoesHtml .= '<button type="button" class="btn btn-sm btn-cyan" data-action="converter-evento" data-id="' . $e['id'] . '" title="Converter em Locação">Converter</button> ';
+        }
+        if (\App\Auth\Rbac::check('eventos.editar')) {
+            $acoesHtml .= '<button type="button" class="btn btn-sm btn-blue" data-action="edit-evento" data-id="' . $e['id'] . '" title="Editar">Editar</button> ';
+        }
+        if (\App\Auth\Rbac::check('eventos.excluir')) {
+            $acoesHtml .= '<button type="button" class="btn btn-sm btn-red" data-action="delete-evento" data-id="' . $e['id'] . '" title="Excluir">Excluir</button>';
+        }
+
+        // Formata data_inicio
+        $dataInicio = !empty($e['data_inicio']) ? date('d/m/Y', strtotime($e['data_inicio'])) : '-';
+        if (!empty($e['hora_inicio'])) {
+            $dataInicio .= ' ' . $e['hora_inicio'];
+        }
+
+        // Célula principal: nome do evento + cliente + separado por
+        $nomeEventoHtml = '<span class="td-name">' . htmlspecialchars($e['nome_evento'] ?? '-') . '</span>';
+        if (!empty($e['cliente_nome'])) {
+            $nomeEventoHtml .= '<br><span style="font-size:12px;color:var(--text-3)">Cliente: ' . htmlspecialchars($e['cliente_nome']) . '</span>';
+        }
+        if (!empty($e['usuario_separacao_nome'])) {
+            $nomeEventoHtml .= '<br><span style="font-size:12px;color:var(--text-3)">Separado por: ' . htmlspecialchars($e['usuario_separacao_nome']) . '</span>';
+        }
+
+        $rows[] = [
+            'data-id' => $e['id'],
+            ['html' => true, 'content' => '<input type="checkbox" class="row-check" value="' . $e['id'] . '">'],
+            ['html' => true, 'content' => $nomeEventoHtml],
+            ['html' => true, 'content' => $dataInicio],
+            ['html' => true, 'content' => $estadoBadge],
+            ['html' => true, 'content' => $statusBadge],
+            ['html' => true, 'content' => $acoesHtml],
+        ];
+    }
+}
+
+$baseUrl = rtrim(\App\Core\Env::get('BASE_URL', ''), '/');
+?>
+
+    <section class="section active" id="sec-eventos">
+      <div class="section-header">
+        <div class="section-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="section-title">Eventos</div>
+          <div class="section-sub">Orçamentos e Locações de Eventos</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+
+      <!-- KPI Cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px" class="evento-stats-grid">
+        <div class="card-stat" style="--stat-color:var(--yellow)">
+          <div class="card-stat-val" style="color:var(--yellow)"><?= $stats['total_orcamentos'] ?? 0 ?></div>
+          <div class="card-stat-lbl">Orçamentos</div>
+        </div>
+        <div class="card-stat" style="--stat-color:var(--cyan)">
+          <div class="card-stat-val" style="color:var(--cyan)"><?= $stats['total_andamento'] ?? 0 ?></div>
+          <div class="card-stat-lbl">Em Andamento</div>
+        </div>
+        <div class="card-stat" style="--stat-color:var(--purple)">
+          <div class="card-stat-val" style="color:var(--purple)"><?= $stats['total_finalizadas'] ?? 0 ?></div>
+          <div class="card-stat-lbl">Finalizadas</div>
+        </div>
+        <div class="card-stat" style="--stat-color:var(--emerald)">
+          <div class="card-stat-val" style="color:var(--emerald)"><?= $stats['total_faturadas'] ?? 0 ?></div>
+          <div class="card-stat-lbl">Faturadas</div>
+        </div>
+      </div>
+
+      <style>
+        @media (max-width:1024px){.evento-stats-grid{grid-template-columns:repeat(2,1fr)!important}}
+        @media (max-width:640px){.evento-stats-grid{grid-template-columns:1fr!important}}
+      </style>
+
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">Eventos</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <?php if (\App\Auth\Rbac::check('eventos.excluir')): ?>
+            <button type="button" class="btn btn-sm btn-red" id="btn-bulk-delete" style="display:none" data-action="bulk-delete-evento">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;margin-right:4px"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Excluir (<span id="bulk-count">0</span>)
+            </button>
+            <?php endif; ?>
+            <a href="<?= $baseUrl ?>/eventos/create" class="btn btn-sm btn-cyan">Novo</a>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0">
+          <?php if (empty($eventos)): ?>
+          <div class="table-empty">
+            <div class="table-empty-flex">
+              <svg class="table-empty-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <div>Nenhum evento encontrado</div>
+              <div style="font-size:12px;color:var(--text-4)">Clique em "Novo" para adicionar</div>
+            </div>
+          </div>
+          <?php else: ?>
+          <?= renderTable([
+              'id'               => 'tbl-eventos',
+              'searchable'       => true,
+              'searchPlaceholder'=> 'Buscar na tabela...',
+              'paginated'        => true,
+              'perPage'          => 15,
+              'headers' => [
+                  ['label' => '<input type="checkbox" id="select-all">', 'html' => true],
+                  ['label' => 'Nome Evento', 'sortable' => true],
+                  ['label' => 'Data Início', 'sortable' => true],
+                  ['label' => 'Estado', 'sortable' => true],
+                  ['label' => 'Status', 'sortable' => true],
+                  ['label' => 'Ações']
+              ],
+              'rows' => $rows
+          ]) ?>
+          <?php endif; ?>
+        </div>
+      </div>
+    </section>
+
+<script>
+function toggleEvento(id, btn) {
+  fetch(BASE_URL + '/eventos/toggle/' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+    body: '_csrf_token=' + CSRF_TOKEN
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      btn.className = 'btn btn-sm ' + (data.status ? 'btn-green' : 'btn-red');
+      btn.textContent = data.status ? 'Ativo' : 'Inativo';
+      showToast('green', 'Atualizado', 'Evento ' + (data.status ? 'ativado' : 'desativado'));
+    } else {
+      showToast('red', 'Erro', data.error || data.message || 'Erro');
+    }
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar'));
+}
+
+function editEvento(id) {
+  window.location.href = BASE_URL + '/eventos/edit/' + id;
+}
+
+function deleteEvento(id) {
+  if (!confirm('Excluir este evento?')) return;
+  fetch(BASE_URL + '/eventos/delete/' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: '_csrf_token=' + CSRF_TOKEN
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('green', 'Excluido', 'Evento excluido');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast('red', 'Erro', data.message || 'Erro ao excluir');
+    }
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar'));
+}
+
+function converterEvento(id) {
+  if (!confirm('Converter este orçamento em locação?')) return;
+  fetch(BASE_URL + '/eventos/update-estado/' + id, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+    body: '_csrf_token=' + CSRF_TOKEN + '&estado=L'
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('green', 'Convertido', 'Evento convertido em locação');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast('red', 'Erro', data.error || data.message || 'Erro ao converter');
+    }
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar'));
+}
+
+function bulkDeleteEventos() {
+  const checked = document.querySelectorAll('.row-check:checked');
+  const ids = Array.from(checked).map(cb => cb.value);
+  if (!ids.length) return;
+  if (!confirm('Excluir ' + ids.length + ' evento(s)?')) return;
+  fetch(BASE_URL + '/eventos/bulk-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+    body: '_csrf_token=' + CSRF_TOKEN + '&ids=' + JSON.stringify(ids)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showToast('green', 'Excluido', ids.length + ' evento(s) excluido(s)');
+      setTimeout(() => window.location.reload(), 1500);
+    } else {
+      showToast('red', 'Erro', data.message || 'Erro ao excluir');
+    }
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar'));
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof window.registerActions === 'function') {
+    window.registerActions({
+      'toggle-evento': (el) => { toggleEvento(el.dataset.id, el); },
+      'edit-evento': (el) => { editEvento(el.dataset.id); },
+      'converter-evento': (el) => { converterEvento(el.dataset.id); },
+      'delete-evento': (el) => { deleteEvento(el.dataset.id); },
+      'bulk-delete-evento': () => { bulkDeleteEventos(); },
+    });
+  }
+
+  const selectAll = document.getElementById('select-all');
+  const btnBulk = document.getElementById('btn-bulk-delete');
+  const bulkCount = document.getElementById('bulk-count');
+  if (selectAll && btnBulk) {
+    function updateBulk() {
+      const n = document.querySelectorAll('.row-check:checked').length;
+      bulkCount.textContent = n;
+      btnBulk.style.display = n > 0 ? 'inline-flex' : 'none';
+    }
+    selectAll.addEventListener('change', () => {
+      document.querySelectorAll('.row-check').forEach(cb => { cb.checked = selectAll.checked; });
+      updateBulk();
+    });
+    document.addEventListener('change', (e) => { if (e.target.classList.contains('row-check')) updateBulk(); });
+  }
+});
+</script>
+<?php require dirname(__DIR__) . '/layout/footer.php'; ?>

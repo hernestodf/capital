@@ -1,0 +1,257 @@
+/* ============================================
+   BUTTON COMPONENT - Design System 3.0
+   ============================================ */
+
+/* Base Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all .15s;
+  border: 2px solid transparent;
+  line-height: 1;
+}
+
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+/* Sizes */
+.btn-sm {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: 8px;
+}
+
+.btn-sm svg {
+  width: 14px;
+  height: 14px;
+}
+
+.btn-lg {
+  padding: 14px 26px;
+  font-size: 16px;
+  border-radius: 12px;
+}
+
+.btn-lg svg {
+  width: 18px;
+  height: 18px;
+}
+
+.btn-xl {
+  padding: 17px 32px;
+  font-size: 17px;
+  border-radius: 14px;
+}
+
+.btn-xl svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Icon Buttons */
+.btn-icon {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 11px;
+}
+
+.btn-icon-sm {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 9px;
+}
+
+.btn-icon-lg {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 14px;
+}
+
+/* Solid Color Buttons */
+.btn-red {
+  background: var(--neon-red);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-red-glow);
+  border-color: var(--neon-red);
+}
+
+.btn-red:hover {
+  box-shadow: 0 6px 30px var(--neon-red-glow);
+  transform: translateY(-2px);
+}
+
+.btn-green {
+  background: var(--neon-green);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-green-glow);
+  border-color: var(--neon-green);
+}
+
+.btn-green:hover {
+  box-shadow: 0 6px 30px var(--neon-green-glow);
+  transform: translateY(-2px);
+}
+
+.btn-cyan {
+  background: var(--neon-cyan);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-cyan-glow);
+  border-color: var(--neon-cyan);
+}
+
+.btn-cyan:hover {
+  box-shadow: 0 6px 30px var(--neon-cyan-glow);
+  transform: translateY(-2px);
+}
+
+.btn-blue {
+  background: var(--neon-blue);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-blue-glow);
+  border-color: var(--neon-blue);
+}
+
+.btn-blue:hover {
+  box-shadow: 0 6px 30px var(--neon-blue-glow);
+  transform: translateY(-2px);
+}
+
+.btn-purple {
+  background: var(--neon-purple);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-purple-glow);
+  border-color: var(--neon-purple);
+}
+
+.btn-purple:hover {
+  box-shadow: 0 6px 30px var(--neon-purple-glow);
+  transform: translateY(-2px);
+}
+
+.btn-orange {
+  background: var(--neon-orange);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-orange-glow);
+  border-color: var(--neon-orange);
+}
+
+.btn-orange:hover {
+  box-shadow: 0 6px 30px var(--neon-orange-glow);
+  transform: translateY(-2px);
+}
+
+.btn-yellow {
+  background: var(--neon-yellow);
+  color: #fff;
+  box-shadow: 0 4px 20px var(--neon-yellow-glow);
+  border-color: var(--neon-yellow);
+}
+
+.btn-yellow:hover {
+  box-shadow: 0 6px 30px var(--neon-yellow-glow);
+  transform: translateY(-2px);
+}
+
+/* Ghost Button */
+.btn-ghost {
+  background: var(--bg-surface);
+  color: var(--text-2);
+  border-color: var(--bg-border);
+}
+
+.btn-ghost:hover {
+  background: var(--bg-hover);
+  color: var(--text-1);
+}
+
+/* Ghost Variants with Color */
+.btn-ghost-cyan {
+  background: var(--bg-card);
+  color: var(--neon-cyan);
+  border-color: var(--neon-cyan);
+}
+
+.btn-ghost-cyan:hover {
+  background: var(--neon-cyan);
+  color: #fff;
+}
+
+.btn-ghost-red {
+  background: var(--bg-card);
+  color: var(--neon-red);
+  border-color: var(--neon-red);
+}
+
+.btn-ghost-red:hover {
+  background: var(--neon-red);
+  color: #fff;
+}
+
+/* Outline Variants */
+.btn-outline-cyan {
+  background: transparent;
+  color: var(--neon-cyan);
+  border: 2px solid var(--neon-cyan);
+}
+
+.btn-outline-cyan:hover {
+  background: var(--neon-cyan);
+  color: #fff;
+}
+
+/* Loading Spinner */
+.btn-spin {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  animation: btnSpin .7s linear infinite;
+}
+
+@keyframes btnSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* States */
+.btn.disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.btn.loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.btn.loading .btn-spin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Button Row Layout */
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}

@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<meta name="theme-color" content="#dc2626" />
+<meta name="description" content="Devolução de OS - Sisloc" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" default />
+<meta name="apple-mobile-web-app-title" content="Devolucao" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" href="favicon.ico" />
+<link rel="icon" href="favicon.ico" />
+<title>Sisloc Devolução</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--primary:#dc2626;--primary-dark:#991b1b;--primary-light:rgba(220,38,38,.1);--bg:#f5f7fa;--surface:#fff;--surface2:#f0f2f5;--border:rgba(0,0,0,.1);--border-med:rgba(0,0,0,.18);--text:#111827;--text-muted:#6b7280;--text-hint:#9ca3af;--success:#059669;--warn:#d97706;--error:#dc2626;--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--shadow-sm:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.1)}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.screen{display:none;flex-direction:column;height:100%}.screen.active{display:flex}
+.topbar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 1rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.topbar-title{font-size:16px;font-weight:700;color:var(--text);white-space:nowrap}
+.btn-logout{background:none;border:none;color:var(--text-muted);font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:var(--radius-sm)}
+.btn-logout:active{background:var(--surface2)}
+.content{flex:1;padding:1.25rem 1rem 6rem;display:flex;flex-direction:column;gap:1rem;overflow-y:auto}
+
+select{width:100%;padding:11px 14px;font-size:15px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none}
+select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.field input{padding:11px 14px;font-size:15px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none;font-family:'SFMono-Regular',Menlo,Consolas,monospace}
+.field input:focus{border-color:var(--primary)}
+.btn-primary{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary:active{opacity:.9}
+.btn-sec{width:100%;padding:13px;background:var(--surface2);color:var(--text);border:0.5px solid var(--border-med);border-radius:var(--radius-md);font-size:15px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.section-label{font-size:13px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.item-list{display:flex;flex-direction:column;gap:4px}
+.item-row{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm)}
+.item-row .name{flex:1;font-size:14px}
+.item-row .sala{font-size:11px;color:var(--text-hint);background:var(--surface2);padding:2px 8px;border-radius:4px}
+.item-row .msg{font-size:11px;color:var(--error);font-weight:500}
+.item-row .badge{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.badge-ok{background:var(--success)}.badge-fail{background:var(--error)}.badge-pend{background:var(--warn)}
+.result-stats{display:flex;gap:8px;margin-bottom:12px}
+.stat-card{flex:1;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
+.stat-card .val{font-size:28px;font-weight:800}
+.stat-card .lbl{font-size:11px;color:var(--text-muted);margin-top:4px}
+.stat-ok{color:var(--success)}.stat-fail{color:var(--error)}
+
+.scan-row{display:flex;gap:8px;align-items:flex-start}
+.scan-row textarea{flex:1;padding:11px 14px;font-size:16px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:'SFMono-Regular',Menlo,Consolas,monospace;outline:none;resize:none;min-height:44px}
+.scan-row textarea:focus{border-color:var(--primary)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#065f46;color:#fff;border-radius:var(--radius-md);padding:13px 20px;font-size:14px;font-weight:500;white-space:nowrap;pointer-events:none;transition:opacity .25s,transform .25s;z-index:200}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--error)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="topbar"><div class="topbar-left"><span class="topbar-title">Sisloc Devolução</span></div></div>
+  <div class="content" style="max-width:400px;margin:0 auto;justify-content:center;padding-bottom:2rem">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
+        <svg fill="none" viewBox="0 0 24 24" stroke="var(--primary)" stroke-width="2" style="width:32px;height:32px"><path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M10 12h4"/><path d="M16 5l-4-4-4 4"/></svg>
+      </div>
+      <div style="font-size:22px;font-weight:700">Devolução de OS</div>
+      <div style="font-size:14px;color:var(--text-muted);margin-top:4px">Sisloc Web</div>
+    </div>
+    <div class="field" id="f-email"><label>E-mail</label><input type="email" id="i-email" placeholder="seu@email.com" autocomplete="email" /></div>
+    <div class="field" id="f-senha"><label>Senha</label><input type="password" id="i-senha" placeholder="••••••••" autocomplete="current-password" /></div>
+    <button class="btn-primary" id="btn-login" onclick="login()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> Entrar</button>
+
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="screen-main" class="screen">
+  <div class="topbar">
+    <div class="topbar-left"><span class="topbar-title">Devolução</span></div>
+    <div style="display:flex;align-items:center;gap:6px">
+
+      <button class="btn-logout" onclick="logout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sair</button>
+    </div>
+  </div>
+  <div class="content">
+    <p class="section-label">Evento</p>
+    <div style="display:flex;gap:8px">
+      <select id="event-select" style="flex:1"><option value="">Selecione...</option></select>
+      <button class="btn-sec" style="flex:0;padding:11px 18px;width:auto" onclick="selecionarEvento()">OK</button>
+    </div>
+
+    <div id="event-badge" class="section-label" style="display:none;color:var(--primary);font-size:13px;font-weight:600"></div>
+
+    <div id="form-area" style="display:none">
+      <p class="section-label">Seriais Montados</p>
+      <div id="seriais-list"></div>
+
+      <p class="section-label" style="margin-top:12px">Adicionar Serial para Devolução</p>
+      <div class="scan-row">
+        <textarea id="serial-input" placeholder="Escanear ou digitar serial..." rows="1" autocomplete="off" spellcheck="false" style="min-height:44px;overflow:hidden" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="btn-primary" style="flex:0;padding:11px 18px;width:auto" onclick="addSerial()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      </div>
+      <p id="added-count" style="font-size:12px;color:var(--text-hint);text-align:right;margin-top:4px">0 serial(is) para devolver</p>
+      <div id="seriais-devolver-list" style="margin-top:8px"></div>
+    </div>
+
+    <div id="result-area" style="display:none"></div>
+  </div>
+
+  <div style="position:fixed;bottom:0;left:0;right:0;padding:1rem 1.25rem;background:var(--surface);border-top:0.5px solid var(--border)">
+    <button class="btn-primary" onclick="enviarDevolucao()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M4 7v10c0 2 1 3 3 3h10c2 0 3-1 3-3V7M10 12h4"/><path d="M16 5l-4-4-4 4"/></svg> Devolver OS</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let API_BASE = '/public';
+let API_KEY = 'sisloc_dev_key_2026';
+let _seriaisParaDevolver = [];
+let _eventoSelecionado = null;
+
+async function loadConfig() {
+  try {
+    const r = await fetch('config.json');
+    if (r.ok) { const c = await r.json(); API_BASE = c.api_base || API_BASE; API_KEY = c.api_key || API_KEY; }
+  } catch(e) {}
+}
+
+const api = {
+  async get(url) {
+    const h = { 'X-Requested-With': 'XMLHttpRequest' };
+    if (url.startsWith('/api/v1/')) h['x-api-key'] = API_KEY;
+    const r = await fetch(API_BASE + url, { headers: h });
+    return { ok: r.ok, data: await r.json(), status: r.status };
+  },
+  async post(url, body) {
+    const h = { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+    if (url.startsWith('/api/v1/')) h['x-api-key'] = API_KEY;
+    const r = await fetch(API_BASE + url, { method: 'POST', headers: h, body: JSON.stringify(body) });
+    return { ok: r.ok, data: await r.json(), status: r.status };
+  },
+};
+
+function showToast(msg, isErr) { const t = document.getElementById('toast'); t.textContent = msg; t.className = 'toast' + (isErr ? ' error' : ''); t.classList.add('show'); clearTimeout(window._tt); window._tt = setTimeout(() => t.classList.remove('show'), 4000); }
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function login() {
+  const email = document.getElementById('i-email').value.trim();
+  const senha = document.getElementById('i-senha').value.trim();
+  if (!email || !senha) { showToast('Informe e-mail e senha', true); return; }
+  document.getElementById('btn-login').disabled = true;
+  try {
+    const r = await fetch(API_BASE + '/api/v1/sessao/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+      body: JSON.stringify({ email, senha }),
+    });
+    const d = await r.json();
+    if (!d.ok) { showToast(d.error || 'Falha no login', true); document.getElementById('btn-login').disabled = false; return; }
+    localStorage.setItem('devolucao_auth', '1');
+    const evts = await carregarEventos();
+    showEvents(evts);
+    showScreen('screen-main');
+  } catch(e) { showToast('Erro ao conectar: ' + e.message, true); }
+  document.getElementById('btn-login').disabled = false;
+}
+
+async function carregarEventos() {
+  const r = await api.get('/api/v1/eventos/ativos');
+  if (!r.ok) throw new Error(r.data?.error || 'Sem permisao');
+  return r.data?.eventos || [];
+}
+
+function showEvents(evts) {
+  const sel = document.getElementById('event-select');
+  sel.innerHTML = '<option value="">Selecione um evento...</option>';
+  evts.forEach(e => {
+    const o = document.createElement('option'); o.value = e.id; o.textContent = e.nome + ' — ' + (e.cliente_nome || '');
+    sel.appendChild(o);
+  });
+}
+
+async function selecionarEvento() {
+  const sel = document.getElementById('event-select');
+  const eid = sel.value;
+  if (!eid) { sel.focus(); return; }
+  _eventoSelecionado = eid;
+  document.getElementById('event-badge').textContent = '📋 ' + sel.options[sel.selectedIndex].text.split(' — ')[0];
+  document.getElementById('event-badge').style.display = 'block';
+  document.getElementById('form-area').style.display = 'block';
+  _seriaisParaDevolver = [];
+  renderSeriais();
+  await carregarSeriaisMontados(eid);
+}
+
+async function carregarSeriaisMontados(eid) {
+  try {
+    const r = await api.get('/api/v1/devolucao/seriais/' + eid);
+    if (!r.ok) return;
+    const list = document.getElementById('seriais-list');
+    const data = r.data?.data || [];
+    if (!data.length) { list.innerHTML = '<div style="font-size:13px;color:var(--text-hint);text-align:center;padding:16px">Nenhum serial montado neste evento</div>'; return; }
+    list.innerHTML = '<div class="item-list">' + data.map(s => {
+      const dev = s.status_devolucao === 'A' || s.status_devolucao === 'S' ? 'devolvido' : '';
+      return '<div class="item-row" style="opacity:' + (dev ? '.5' : '1') + '"><span class="badge ' + (dev ? 'badge-ok' : 'badge-pend') + '"></span><span class="name">' + esc(s.serial) + '</span><span class="sala">' + esc(s.nome_sala || '') + '</span><span style="font-size:11px;color:var(--text-hint)">' + esc(s.produto || '') + '</span></div>';
+    }).join('') + '</div>';
+  } catch(e) {}
+}
+
+function addSerial() {
+  const raw = document.getElementById('serial-input').value.trim();
+  if (!raw) return;
+  const seriais = raw.split('\n').map(s => s.trim()).filter(Boolean);
+  seriais.forEach(s => {
+    if (!_seriaisParaDevolver.some(x => x === s)) _seriaisParaDevolver.push(s);
+  });
+  document.getElementById('serial-input').value = '';
+  document.getElementById('serial-input').focus();
+  renderSeriais();
+}
+
+function renderSeriais() {
+  document.getElementById('added-count').textContent = _seriaisParaDevolver.length + ' serial(is) para devolver';
+  const list = document.getElementById('seriais-devolver-list');
+  if (!_seriaisParaDevolver.length) { list.innerHTML = ''; return; }
+  list.innerHTML = '<div class="item-list">' + _seriaisParaDevolver.map((s, i) =>
+    '<div class="item-row"><span class="badge badge-pend"></span><span class="name" style="font-family:monospace">' + esc(s) + '</span>' +
+    '<button onclick="_seriaisParaDevolver.splice(' + i + ',1);renderSeriais()" style="background:none;border:none;color:var(--error);cursor:pointer;font-size:14px" title="Remover">✕</button></div>'
+  ).join('') + '</div>';
+}
+
+async function enviarDevolucao() {
+  if (!_eventoSelecionado) { showToast('Selecione um evento primeiro', true); return; }
+  if (_seriaisParaDevolver.length === 0) { showToast('Insira seriais para devolver', true); return; }
+
+  try {
+    const r = await api.post('/api/v1/devolucao/devolver-lote', {
+      evento_id: +_eventoSelecionado,
+      seriais: _seriaisParaDevolver.map(s => ({ serial: s })),
+    });
+    const d = r.data;
+    const inseridos = d.inseridos || [];
+    const falhas = d.falhas || [];
+
+    document.getElementById('form-area').style.display = 'none';
+    const area = document.getElementById('result-area');
+    area.style.display = 'block';
+    area.innerHTML = '<div style="text-align:center;padding:16px 0">' +
+      '<div style="width:64px;height:64px;border-radius:50%;background:' + (falhas.length === 0 ? 'rgba(5,150,105,0.15)' : 'rgba(234,179,8,0.15)') + ';display:flex;align-items:center;justify-content:center;margin:0 auto 12px">' +
+      '<svg fill="none" viewBox="0 0 24 24" stroke="' + (falhas.length === 0 ? 'var(--success)' : 'var(--warn)') + '" stroke-width="2" style="width:32px;height:32px">' +
+      (falhas.length === 0 ? '<polyline points="20 6 9 17 4 12"/>' : '<path d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>') +
+      '</svg></div>' +
+      '<div style="font-size:20px;font-weight:700;color:var(--text)">' + (falhas.length === 0 ? 'Devolução concluída!' : 'Devolução processada') + '</div>' +
+      '<div style="font-size:14px;color:var(--text-muted)">' + inseridos.length + ' de ' + (inseridos.length + falhas.length) + ' serial(is) devolvidos</div></div>';
+
+    if (inseridos.length) {
+      area.innerHTML += '<p class="section-label" style="margin-top:12px">' + inseridos.length + ' Devolvido(s)</p><div class="item-list">' +
+        inseridos.map(s => '<div class="item-row"><span class="badge badge-ok"></span><span class="name" style="font-family:monospace">' + esc(s.serial) + '</span></div>').join('') + '</div>';
+    }
+    if (falhas.length) {
+      area.innerHTML += '<p class="section-label" style="margin-top:12px">' + falhas.length + ' Falha(s)</p><div class="item-list">' +
+        falhas.map(s => '<div class="item-row"><span class="badge badge-fail"></span><span class="name" style="font-family:monospace">' + esc(s.serial) + '</span><span class="msg">' + esc(s.mensagem) + '</span></div>').join('') + '</div>';
+    }
+    area.innerHTML += '<div style="margin-top:20px;display:flex;flex-direction:column;gap:8px">' +
+      '<button class="btn-primary" onclick="resetForm()">Nova Devolução</button></div>';
+
+    area.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    _seriaisParaDevolver = [];
+    renderSeriais();
+    document.getElementById('form-area').style.display = 'none';
+    await carregarSeriaisMontados(_eventoSelecionado);
+  } catch(e) { showToast('Erro: ' + e.message, true); }
+}
+
+function resetForm() {
+  _seriaisParaDevolver = [];
+  document.getElementById('result-area').style.display = 'none';
+  document.getElementById('result-area').innerHTML = '';
+  document.getElementById('form-area').style.display = 'block';
+  document.getElementById('serial-input').value = '';
+  renderSeriais();
+}
+
+function logout() {
+  localStorage.removeItem('devolucao_auth');
+  showScreen('screen-login');
+}
+
+(async () => {
+  if (localStorage.getItem('devolucao_auth') === '1') {
+    try { const e = await carregarEventos(); showEvents(e); showScreen('screen-main'); } catch(e) { localStorage.removeItem('devolucao_auth'); showScreen('screen-login'); }
+  } else { showScreen('screen-login'); }
+})();
+
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {})); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey && document.activeElement.id === 'serial-input') {
+    e.preventDefault(); addSerial();
+  }
+});
+</script>
+</body>
+</html>

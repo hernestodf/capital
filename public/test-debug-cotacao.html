@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Cotação - Teste de Sessão</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+        }
+        .box {
+            background: #2a2a2a;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .warning { color: #ffaa00; }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug: Cotação - Teste de Sessão</h1>
+    
+    <div class="box">
+        <h2>Informações da Página</h2>
+        <div id="page-info"></div>
+    </div>
+
+    <div class="box">
+        <h2>Teste 1: Verificar Sessão PHP</h2>
+        <button onclick="testSession()">Testar Sessão</button>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>Teste 2: Endpoint Fornecedores-by-Item</h2>
+        <button onclick="testFornecedoresEndpoint()">Testar Endpoint</button>
+        <div id="fornecedores-result"></div>
+    </div>
+
+    <div class="box">
+        <h2>Teste 3: Dados do COTACAO_DATA</h2>
+        <div id="cotacao-data"></div>
+    </div>
+
+    <script>
+        // Dados da cotação (mesmos que a view passa)
+        window.BASE_URL = 'http://localhost/sisloc/public';
+        window.COTACAO_DATA = {
+            idEvento: 1,
+            idProdutoEvento: 2,
+            csrfToken: ''
+        };
+
+        var BASE_URL = window.BASE_URL;
+        var data = window.COTACAO_DATA;
+
+        // Info da página
+        document.getElementById('page-info').innerHTML = 
+            '<p>BASE_URL: ' + BASE_URL + '</p>' +
+            '<p>idProdutoEvento: ' + data.idProdutoEvento + '</p>' +
+            '<p>URL do Endpoint: ' + BASE_URL + '/cotacao/fornecedores-by-item/' + data.idProdutoEvento + '</p>';
+
+        // Teste de Sessão
+        function testSession() {
+            var result = document.getElementById('session-result');
+            result.innerHTML = '<p class="warning">⏳ Testando sessão...</p>';
+
+            fetch(BASE_URL + '/auth/session-info', {
+                method: 'GET',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                credentials: 'same-origin'
+            })
+            .then(function(r) {
+                result.innerHTML += '<p>Status HTTP: ' + r.status + '</p>';
+                return r.json();
+            })
+            .then(function(d) {
+                result.innerHTML += '<pre>' + JSON.stringify(d, null, 2) + '</pre>';
+                if (d.logged_in) {
+                    result.innerHTML += '<p class="success">✅ Usuário está logado: ' + d.user.nome + '</p>';
+                } else {
+                    result.innerHTML += '<p class="error">❌ Usuário NÃO está logado!</p>';
+                    result.innerHTML += '<p class="error">FAÇA LOGIN EM: <a href="' + BASE_URL + '/auth/login" style="color:#ff0000">' + BASE_URL + '/auth/login</a></p>';
+                }
+            })
+            .catch(function(err) {
+                result.innerHTML += '<p class="error">❌ Erro: ' + err.message + '</p>';
+            });
+        }
+
+        // Teste do Endpoint
+        function testFornecedoresEndpoint() {
+            var result = document.getElementById('fornecedores-result');
+            result.innerHTML = '<p class="warning">⏳ Chamando endpoint...</p>';
+
+            console.log('[TEST] Chamando:', BASE_URL + '/cotacao/fornecedores-by-item/' + data.idProdutoEvento);
+
+            fetch(BASE_URL + '/cotacao/fornecedores-by-item/' + data.idProdutoEvento, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': data.csrfToken || ''
+                },
+                credentials: 'same-origin'
+            })
+            .then(function(r) {
+                console.log('[TEST] Response status:', r.status);
+                result.innerHTML += '<p>Status HTTP: ' + r.status + '</p>';
+                
+                if (r.status === 401) {
+                    throw new Error('Unauthorized - Usuário não está autenticado');
+                }
+                
+                return r.json();
+            })
+            .then(function(d) {
+                console.log('[TEST] Data:', d);
+                result.innerHTML += '<pre>' + JSON.stringify(d, null, 2) + '</pre>';
+                
+                if (d.success && d.data && d.data.length > 0) {
+                    result.innerHTML += '<p class="success">✅ Sucesso! ' + d.data.length + ' fornecedor(es) encontrado(s)</p>';
+                    d.data.forEach(function(f, i) {
+                        result.innerHTML += '<p class="success">' + (i+1) + '. ' + f.nome_fantasia + ' (' + f.num_mensagens + ' mensagens)</p>';
+                    });
+                } else if (d.error) {
+                    result.innerHTML += '<p class="error">❌ Erro: ' + d.error + '</p>';
+                } else {
+                    result.innerHTML += '<p class="warning">⚠️ Nenhum fornecedor encontrado</p>';
+                }
+            })
+            .catch(function(err) {
+                console.error('[TEST] Error:', err);
+                result.innerHTML += '<p class="error">❌ Erro: ' + err.message + '</p>';
+                result.innerHTML += '<p class="error">SOLUÇÃO: Verifique se está logado no sistema</p>';
+            });
+        }
+
+        // Mostrar COTACAO_DATA
+        document.getElementById('cotacao-data').innerHTML = 
+            '<pre>' + JSON.stringify(window.COTACAO_DATA, null, 2) + '</pre>';
+
+        // Auto-executar testes ao carregar
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('[TEST] Página carregada, executando testes...');
+            testSession();
+            setTimeout(testFornecedoresEndpoint, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+echo "post-commit: rode o loop diário do .ai/bootstrap/daily_run.md sobre git diff HEAD~1"
+# claude "Execute .ai/bootstrap/daily_run.md sobre: $(git diff HEAD~1 --stat)"
+exit 0

@@ -1,0 +1,247 @@
+{
+  "name": "Design System 3.0 - White Rabbit",
+  "version": "3.0.0",
+  "description": "Sistema de design completo para SisLoc - Aplicativo de gerenciamento de locações",
+  "brand": {
+    "primary": "cyan",
+    "palette": ["red", "orange", "yellow", "green", "cyan", "blue", "purple"]
+  },
+  "paths": {
+    "css": "assets/css",
+    "js": "assets/js",
+    "components": "assets/components"
+  },
+  "components": {
+    "button": {
+      "path": "assets/components/button",
+      "uso": "Ações principais do sistema, submissão de formulários, navegação",
+      "variants": ["btn-sm", "btn-lg", "btn-xl", "btn-icon", "btn-red", "btn-green", "btn-cyan", "btn-blue", "btn-purple", "btn-orange", "btn-yellow", "btn-ghost", "btn-ghost-cyan", "btn-ghost-red", "btn-outline-cyan", "loading", "disabled"],
+      "states": ["normal", "hover", "loading", "disabled"]
+    },
+    "modal": {
+      "path": "assets/components/modal",
+      "uso": "Diálogos, confirmações, formulários em overlay",
+      "variants": ["modal-sm", "modal-md", "modal-lg"],
+      "states": ["closed", "open"]
+    },
+    "alert": {
+      "path": "assets/components/alert",
+      "uso": "Notificações inline, mensagens de erro, sucesso, aviso",
+      "variants": ["alert-red", "alert-green", "alert-yellow", "alert-cyan", "alert-blue", "alert-purple"],
+      "states": ["visible", "dismissed"]
+    },
+    "badge": {
+      "path": "assets/components/badge",
+      "uso": "Indicadores de status, contadores, labels",
+      "variants": ["badge-sm", "badge-lg", "badge-red", "badge-green", "badge-cyan", "badge-blue", "badge-purple", "badge-orange", "badge-yellow", "dot-pulse"],
+      "states": ["static", "pulse"]
+    },
+    "card": {
+      "path": "assets/components/card",
+      "uso": "Containers de conteúdo, estatísticas, informações agrupadas",
+      "variants": ["card", "custom-card", "card-glow", "card-stat"],
+      "states": ["default", "glow"]
+    },
+    "input": {
+      "path": "assets/components/input",
+      "uso": "Campos de formulário: texto, email, password, busca",
+      "variants": ["fi", "fg", "fl", "disabled", "focus"],
+      "states": ["default", "focus", "disabled", "error", "success"]
+    },
+    "checkbox": {
+      "path": "assets/components/checkbox",
+      "uso": "Seleção múltipla, toggles booleanos",
+      "variants": ["chk-group", "chk-row", "chk-box"],
+      "states": ["unchecked", "checked"]
+    },
+    "radio": {
+      "path": "assets/components/radio",
+      "uso": "Seleção única entre múltiplas opções",
+      "variants": ["radio-box"],
+      "states": ["unchecked", "checked"]
+    },
+    "toggle": {
+      "path": "assets/components/toggle",
+      "uso": "Ativar/desativar configurações, switches",
+      "variants": ["tog", "tog-s", "tog-cyan", "tog-red"],
+      "states": ["off", "on"]
+    },
+    "select": {
+      "path": "assets/components/select",
+      "uso": "Dropdowns, seleção de opções em formulário",
+      "variants": ["fi"],
+      "states": ["default", "focus", "disabled"]
+    },
+    "textarea": {
+      "path": "assets/components/textarea",
+      "uso": "Campos de texto multilinha, mensagens, descrições",
+      "variants": ["fi"],
+      "states": ["default", "focus", "disabled"]
+    },
+    "file-upload": {
+      "path": "assets/components/file-upload",
+      "uso": "Upload de arquivos, drag-and-drop",
+      "variants": ["file-drop", "file-preview", "file-item"],
+      "states": ["idle", "dragover", "uploaded"]
+    },
+    "avatar": {
+      "path": "assets/components/avatar",
+      "uso": "Identificação visual de usuários, perfis",
+      "variants": ["av-sm", "av-lg", "av-xl", "av-online", "av-busy", "av-offline", "avatar-group"],
+      "states": ["default", "online", "busy", "offline"]
+    },
+    "toast": {
+      "path": "assets/components/toast",
+      "uso": "Notificações temporárias, feedback de ações",
+      "variants": ["toast-red", "toast-green", "toast-cyan", "toast-yellow", "toast-purple", "toast-orange"],
+      "states": ["showing", "hiding", "dismissed"]
+    },
+    "tooltip": {
+      "path": "assets/components/tooltip",
+      "uso": "Dicas contextuais no hover",
+      "variants": ["data-tip", "data-tip-red", "data-tip-cyan", "data-tip-green", "data-tip-yellow", "data-tip-purple"],
+      "states": ["hidden", "visible"]
+    },
+    "popover": {
+      "path": "assets/components/popover",
+      "uso": "Menus contextuais, informações extras popup",
+      "variants": ["popover", "pop-bottom"],
+      "states": ["closed", "open"]
+    },
+    "tabs": {
+      "path": "assets/components/tabs",
+      "uso": "Navegação entre seções, organização de conteúdo",
+      "variants": ["htabs-color", "ht-color", "htabs-underline", "ht-ul", "htabs-pill", "ht-pill", "htabs-segmented", "ht-seg", "vtabs", "vt-item", "vtabs-nav", "vtabs-content", "vtabs-dark"],
+      "states": ["inactive", "active"]
+    },
+    "accordion": {
+      "path": "assets/components/accordion",
+      "uso": "FAQ, configurações expansíveis, conteúdo colapsável",
+      "variants": ["accordion-item", "accordion-header", "accordion-body"],
+      "states": ["collapsed", "expanded"]
+    },
+    "table": {
+      "path": "assets/components/table",
+      "uso": "Dados tabulares, listagens, relatórios",
+      "variants": ["data-table", "table-wrap", "th-sort"],
+      "states": ["default", "sorted-asc", "sorted-desc", "hover"]
+    },
+    "stepper": {
+      "path": "assets/components/stepper",
+      "uso": "Formulários multi-etapa, wizards, fluxos",
+      "variants": ["stepper", "step-item", "step-circle", "step-pane"],
+      "states": ["pending", "active", "done"]
+    },
+    "progress": {
+      "path": "assets/components/progress",
+      "uso": "Barras de progresso, indicadores de completude",
+      "variants": ["prog-wrap", "prog-track", "prog-bar", "prog-thick"],
+      "states": ["animating", "complete"]
+    },
+    "spinner": {
+      "path": "assets/components/spinner",
+      "uso": "Indicadores de carregamento, estados de espera",
+      "variants": ["spinner-sm", "spinner-md", "spinner-lg", "spinner-xl", "spinner-dots", "spinner-bar", "spinner-ring"],
+      "states": ["spinning"]
+    },
+    "skeleton": {
+      "path": "assets/components/skeleton",
+      "uso": "Placeholders de carregamento, estados de loading",
+      "variants": ["skel", "skel-block", "skel-card", "skel-row", "skel-circle"],
+      "states": ["loading", "loaded"]
+    },
+    "chip": {
+      "path": "assets/components/chip",
+      "uso": "Filtros, seleções múltiplas, tags de filtro",
+      "variants": ["chip", "chip-removable"],
+      "states": ["unselected", "selected"]
+    },
+    "tag": {
+      "path": "assets/components/tag",
+      "uso": "Etiquetas de status, labels informativos",
+      "variants": ["tag-cyan", "tag-green", "tag-red", "tag-yellow", "tag-purple"],
+      "states": ["static"]
+    },
+    "rating": {
+      "path": "assets/components/rating",
+      "uso": "Avaliações, feedback de satisfação",
+      "variants": ["rating-sm", "rating-lg", "rating-group"],
+      "states": ["empty", "hover", "rated"]
+    },
+    "timeline": {
+      "path": "assets/components/timeline",
+      "uso": "Histórico de eventos, logs, cronologia",
+      "variants": ["timeline", "tl-item", "tl-dot"],
+      "states": ["default"]
+    },
+    "carousel": {
+      "path": "assets/components/carousel",
+      "uso": "Slideshow, apresentação de conteúdo",
+      "variants": ["carousel", "carousel-track", "carousel-slide", "carousel-dots", "carousel-nav"],
+      "states": ["sliding"]
+    },
+    "calendar": {
+      "path": "assets/components/calendar",
+      "uso": "Visualização de datas, agendamentos",
+      "variants": ["cal", "cal-head", "cal-grid", "cal-day", "cal-event"],
+      "states": ["default", "today", "has-event"]
+    },
+    "invoice": {
+      "path": "assets/components/invoice",
+      "uso": "Faturas, recibos, documentos financeiros",
+      "variants": ["invoice", "invoice-head", "invoice-body", "invoice-table", "invoice-foot"],
+      "states": ["default"]
+    },
+    "list-item": {
+      "path": "assets/components/list-item",
+      "uso": "Listagens de itens, registros, cards horizontais",
+      "variants": ["list-item", "list-item-icon", "list-item-body", "list-item-divider"],
+      "states": ["default", "hover"]
+    },
+    "sidebar": {
+      "path": "assets/components/sidebar",
+      "uso": "Navegação principal, menu lateral",
+      "variants": ["sidebar", "sb-full", "sb-mini", "ni", "si", "sub"],
+      "states": ["expanded", "collapsed"]
+    },
+    "topbar": {
+      "path": "assets/components/topbar",
+      "uso": "Header fixo, breadcrumb, busca global",
+      "variants": ["topbar", "breadcrumb", "search-bar"],
+      "states": ["default"]
+    },
+    "offcanvas": {
+      "path": "assets/components/offcanvas",
+      "uso": "Painéis laterais, filtros, perfil do usuário",
+      "variants": ["left-canvas", "right-canvas"],
+      "states": ["closed", "open"]
+    },
+    "fab": {
+      "path": "assets/components/fab",
+      "uso": "Botão de ação flutuante, atalho rápido",
+      "variants": ["fab"],
+      "states": ["hidden", "visible"]
+    }
+  },
+  "ai-guidelines": {
+    "rules": [
+      "Sempre verificar se componente existe antes de criar novo",
+      "Reutilizar padrões existentes documentados em .md",
+      "Seguir convenção de nomenclatura do design system",
+      "Usar variáveis CSS (--neon-*) ao invés de cores hardcoded",
+      "Manter consistência de spacing e border-radius",
+      "Incluir estados de loading em botões de ação",
+      "Usar Toast para feedback de ações ao invés de alert()",
+      "Manter acessibilidade com aria-labels quando necessário"
+    ],
+    "color-meanings": {
+      "red": "Erro, delete, perigo, atraso",
+      "green": "Sucesso, aprovado, ativo, OK",
+      "yellow": "Atenção, pendente, alerta, manutenção",
+      "cyan": "Primário, informação, ações padrão",
+      "blue": "Processando, em andamento",
+      "purple": "Especial, promoção, destaque",
+      "orange": "Alerta, notificação importante"
+    }
+  }
+}

@@ -1,0 +1,118 @@
+# AIPOS Alert Rules
+# Configuracao de alertas para monitoramento do sistema
+
+alerts:
+  # Health Alerts
+  - name: "health_critical"
+    metric: "health_score"
+    threshold: 50
+    severity: "critical"
+    message: "Health score abaixo de 50 - intervencao imediata necessaria"
+    action: "notify_admin"
+
+  - name: "health_warning"
+    metric: "health_score"
+    threshold: 80
+    severity: "warning"
+    message: "Health score abaixo de 80 - verificar componentes"
+    action: "log"
+
+  # Security Alerts
+  - name: "security_critical"
+    metric: "security_score"
+    threshold: 70
+    severity: "critical"
+    message: "Security score abaixo de 70 - vulnerabilidades criticas detectadas"
+    action: "notify_admin"
+
+  - name: "security_high_findings"
+    metric: "security_critical_count"
+    threshold: 1
+    severity: "high"
+    message: "Vulnerabilidade critica de seguranca detectada"
+    action: "notify_admin"
+
+  # Coverage Alerts
+  - name: "coverage_low"
+    metric: "coverage_score"
+    threshold: 30
+    severity: "warning"
+    message: "Coverage abaixo de 30% - adicionar testes"
+    action: "log"
+
+  # Performance Alerts
+  - name: "response_time_slow"
+    metric: "avg_response_time"
+    threshold: 3.0
+    severity: "warning"
+    message: "Tempo medio de resposta acima de 3s"
+    action: "log"
+
+  - name: "response_time_critical"
+    metric: "avg_response_time"
+    threshold: 5.0
+    severity: "critical"
+    message: "Tempo medio de resposta acima de 5s - sistema instavel"
+    action: "notify_admin"
+
+  # Disk Alerts
+  - name: "disk_warning"
+    metric: "disk_usage_pct"
+    threshold: 80
+    severity: "warning"
+    message: "Uso de disco acima de 80%"
+    action: "log"
+
+  - name: "disk_critical"
+    metric: "disk_usage_pct"
+    threshold: 95
+    severity: "critical"
+    message: "Uso de disco acima de 95% - limpar espaco urgente"
+    action: "notify_admin"
+
+  # PHP Error Alerts
+  - name: "php_errors_high"
+    metric: "php_errors_count"
+    threshold: 10
+    severity: "warning"
+    message: "Mais de 10 erros PHP na ultima hora"
+    action: "log"
+
+  - name: "php_errors_critical"
+    metric: "php_errors_count"
+    threshold: 50
+    severity: "critical"
+    message: "Mais de 50 erros PHP na ultima hora - verificar logs"
+    action: "notify_admin"
+
+  # Debt Alerts
+  - name: "debt_high"
+    metric: "debt_score"
+    threshold: 80
+    severity: "warning"
+    message: "Debt score acima de 80 - refatorar codigo"
+    action: "log"
+
+# Notification channels
+notifications:
+  email:
+    enabled: true
+    recipients:
+      - "admin@capital.sisloc.online"
+    smtp_host: "smtp.sisloc.online"
+    smtp_port: 587
+
+  slack:
+    enabled: false
+    webhook_url: ""
+
+  log:
+    enabled: true
+    file: "storage/logs/alerts.log"
+
+# Schedule
+schedule:
+  health_check: "*/5 * * * *"      # A cada 5 minutos
+  security_scan: "0 */6 * * *"     # A cada 6 horas
+  coverage_report: "0 0 * * *"     # Diariamente as 00:00
+  debt_analysis: "0 0 * * 0"       # Semanalmente domingo

@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0b6e8c" />
+  <meta name="description" content="PresençaApp — Registro de Presença Sisloc" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" default />
+  <meta name="apple-mobile-web-app-title" content="PresençaApp" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="favicon.ico" />
+  <title>PresençaApp — Sisloc</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --primary:#0b6e8c;--primary-dark:#094a66;--primary-light:rgba(11,110,140,.1);
+      --bg:#f5f7fa;--surface:#fff;--surface2:#f0f2f5;
+      --border:rgba(0,0,0,.1);--border-med:rgba(0,0,0,.18);
+      --text:#111827;--text-muted:#6b7280;--text-hint:#9ca3af;
+      --success:#059669;--warn:#d97706;--error:#dc2626;
+      --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;
+      --shadow-sm:0 1px 3px rgba(0,0,0,.08);--shadow-md:0 4px 16px rgba(0,0,0,.1)
+    }
+    html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+    #app{min-height:100%;display:flex;flex-direction:column}
+    .screen{display:none;flex-direction:column;flex:1}.screen.active{display:flex}
+
+    /* ── LOGIN ── */
+    #screen-login{align-items:center;justify-content:center;padding:1.5rem;min-height:100dvh;background:var(--bg)}
+    .login-wrap{width:100%;max-width:400px}
+    .login-logo{display:flex;align-items:center;gap:12px;margin-bottom:2.5rem}
+    .logo-icon{width:48px;height:48px;background:var(--primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center}
+    .logo-icon svg{width:26px;height:26px;color:#fff}
+    .logo-text{line-height:1.2}.logo-text strong{display:block;font-size:18px;font-weight:700}.logo-text span{font-size:13px;color:var(--text-muted)}
+    .login-card{background:var(--surface);border:0.5px solid var(--border-med);border-radius:var(--radius-xl);padding:2rem;box-shadow:var(--shadow-md)}
+    .login-card h1{font-size:20px;font-weight:700;margin-bottom:4px}.login-card p{font-size:14px;color:var(--text-muted);margin-bottom:1.75rem}
+    .field{margin-bottom:1rem}.field label{display:block;font-size:13px;font-weight:500;color:var(--text-muted);margin-bottom:6px}
+    .field input{width:100%;padding:11px 14px;font-size:15px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;-webkit-appearance:none}
+    .field input:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-light)}
+    .field-error{font-size:12px;color:var(--error);margin-top:4px;display:none}.field.has-error input{border-color:var(--error)}.field.has-error .field-error{display:block}
+    .btn-primary{width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:600;cursor:pointer;margin-top:.5rem;display:flex;align-items:center;justify-content:center;gap:8px}.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+
+    /* ── TOPBAR ── */
+    .topbar{background:var(--surface);border-bottom:0.5px solid var(--border);padding:0 1rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10}
+    .topbar-left{display:flex;align-items:center;gap:10px}
+    .topbar-icon{width:32px;height:32px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center}
+    .topbar-icon svg{width:18px;height:18px;color:#fff}
+    .topbar-title{font-size:16px;font-weight:600}
+    .btn-logout{background:none;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);padding:7px 12px;font-size:13px;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;gap:6px}
+    .btn-icon{background:none;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);padding:7px 10px;cursor:pointer;display:flex;align-items:center;color:var(--text-muted)}
+
+    /* ── CONTENT ── */
+    .content{flex:1;padding:1.25rem 1rem 5rem;display:flex;flex-direction:column;gap:1rem}
+    .section-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-hint);margin-bottom:6px}
+    select{width:100%;padding:11px 14px;font-size:15px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;cursor:pointer;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+
+    /* ── EVENTOS ── */
+    .event-row{display:flex;gap:8px}
+    .btn-selecionar{padding:11px 16px;background:none;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);font-size:14px;font-weight:500;color:var(--primary);cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap}
+    .event-badge{display:none;align-items:center;gap:8px;background:var(--primary-light);border:0.5px solid rgba(11,110,140,.25);border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;color:var(--primary);margin-top:6px}.event-badge.visible{display:flex}
+
+    /* ── COLABORADORES ── */
+    .search-row{position:relative}
+    .search-row input{width:100%;padding:10px 14px 10px 38px;font-size:14px;border:0.5px solid var(--border-med);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);outline:none}
+    .search-row input:focus{border-color:var(--primary)}
+    .search-row svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-hint);pointer-events:none}
+    .colab-list{display:flex;flex-direction:column;gap:6px}
+    .colab-card{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-md);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .1s}
+    .colab-card:active{background:var(--surface2)}
+    .colab-card.status-presente{border-left:3px solid var(--success)}
+    .colab-card.status-saiu{border-left:3px solid var(--primary)}
+    .colab-card.status-ausente{border-left:3px solid var(--border-med)}
+    .colab-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;border:0.5px solid var(--border)}
+    .colab-avatar-ph{width:44px;height:44px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;font-weight:700;color:var(--primary);border:0.5px solid rgba(11,110,140,.2)}
+    .colab-info{flex:1;min-width:0}
+    .colab-nome{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .colab-funcao{font-size:12px;color:var(--text-muted);margin-top:1px}
+    .colab-status-col{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+    .status-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+    .badge-ausente{background:#f1f5f9;color:var(--text-muted)}
+    .badge-presente{background:rgba(5,150,105,.1);color:var(--success)}
+    .badge-saiu{background:rgba(11,110,140,.1);color:var(--primary)}
+    .status-hora{font-size:10px;color:var(--text-hint)}
+    .stats-row{display:flex;gap:8px}
+    .stat-pill{flex:1;text-align:center;padding:8px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-sm)}
+    .stat-pill .n{font-size:20px;font-weight:700;line-height:1}
+    .stat-pill .l{font-size:10px;color:var(--text-muted);margin-top:2px}
+    .n-ausente{color:var(--text-muted)}.n-presente{color:var(--success)}.n-saiu{color:var(--primary)}
+    .empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-hint);font-size:14px}
+
+    /* ── REGISTRO ── */
+    .reg-colabinfo{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border:0.5px solid var(--border);border-radius:var(--radius-md)}
+    .reg-avatar{width:56px;height:56px;border-radius:50%;object-fit:cover;background:var(--surface2);flex-shrink:0;border:0.5px solid var(--border)}
+    .reg-avatar-ph{width:56px;height:56px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;font-weight:700;color:var(--primary)}
+    .reg-nome{font-size:17px;font-weight:700}
+    .reg-funcao{font-size:13px;color:var(--text-muted);margin-top:2px}
+    .reg-status-txt{font-size:12px;font-weight:600;margin-top:4px}
+
+    /* Geo status — igual ao sistema existente */
+    .geo-status{font-size:12px;text-align:center;padding:8px 12px;border-radius:var(--radius-sm);background:var(--surface2);color:var(--text-muted);display:flex;align-items:center;justify-content:center;gap:6px}
+    .geo-status.ok{background:rgba(5,150,105,.08);color:var(--success)}
+    .geo-status.warn{background:rgba(217,119,6,.08);color:var(--warn)}
+    .geo-status.error{background:rgba(220,38,38,.08);color:var(--error)}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .geo-dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0}
+    .geo-dot.pulsing{animation:pulse 1.2s ease-in-out infinite}
+
+    .foto-area{border:2px dashed var(--border-med);border-radius:var(--radius-lg);overflow:hidden;position:relative;background:var(--surface2);min-height:220px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .foto-area.has-foto{border-style:solid;border-color:var(--primary)}
+    .foto-area input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .foto-placeholder{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-hint);padding:2rem;pointer-events:none;text-align:center}
+    .foto-placeholder svg{opacity:.45}
+    .foto-placeholder span{font-size:13px}
+    .foto-preview{width:100%;height:100%;object-fit:cover;display:none;max-height:320px}
+    .foto-preview.visible{display:block}
+
+    .action-btns{display:flex;flex-direction:column;gap:10px}
+    .btn-entrada{width:100%;padding:14px;background:var(--success);color:#fff;border:none;border-radius:var(--radius-md);font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-entrada:disabled{opacity:.45;cursor:not-allowed}
+    .btn-saida{width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn-saida:disabled{opacity:.45;cursor:not-allowed}
+    .btn-outline{width:100%;padding:12px;background:none;border:0.5px solid var(--border-med);border-radius:var(--radius-md);font-size:14px;color:var(--text-muted);cursor:pointer}
+    .info-box{padding:12px;background:rgba(11,110,140,.06);border:0.5px solid rgba(11,110,140,.2);border-radius:var(--radius-sm);font-size:13px;color:var(--primary)}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:88px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#065f46;color:#fff;border-radius:var(--radius-md);padding:13px 20px;font-size:14px;font-weight:500;white-space:nowrap;pointer-events:none;transition:opacity .25s,transform .25s;z-index:200}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.error{background:var(--error)}.toast.warn{background:var(--warn)}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+    /* ── LOADING ── */
+    .loading-overlay{position:fixed;inset:0;background:rgba(245,247,250,.85);display:none;align-items:center;justify-content:center;z-index:100;flex-direction:column;gap:12px}
+    .loading-overlay.show{display:flex}
+    .loading-spinner{width:36px;height:36px;border:3px solid var(--primary-light);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+    .loading-text{font-size:14px;color:var(--text-muted);font-weight:500}
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════ LOGIN ══════════════════ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-wrap">
+      <div class="login-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+        </div>
+        <div class="logo-text">
+          <strong>PresençaApp</strong>
+          <span>Registro de Colaboradores</span>
+        </div>
+      </div>
+      <div class="login-card">
+        <h1>Bem-vindo</h1>
+        <p>Entre com suas credenciais do SisLoc</p>
+        <div class="field" id="f-email">
+          <label for="i-email">E-mail</label>
+          <input type="email" id="i-email" placeholder="seu@email.com" autocomplete="email" />
+          <span class="field-error">Informe um e-mail válido</span>
+        </div>
+        <div class="field" id="f-senha">
+          <label for="i-senha">Senha</label>
+          <input type="password" id="i-senha" placeholder="••••••••" autocomplete="current-password" />
+          <span class="field-error">Informe sua senha</span>
+        </div>
+        <button class="btn-primary" id="btn-login" onclick="login()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+          Entrar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ EVENTOS ══════════════════ -->
+  <div id="screen-eventos" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span class="topbar-title">Eventos</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sair
+      </button>
+    </div>
+    <div class="content">
+      <div>
+        <p class="section-label">Selecionar Evento</p>
+        <div class="event-row">
+          <select id="event-select"><option value="">Carregando eventos...</option></select>
+          <button class="btn-selecionar" onclick="selecionarEvento()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="20 6 9 17 4 12"/></svg>
+            OK
+          </button>
+        </div>
+        <div class="event-badge" id="event-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          <span>Evento: <strong id="event-name-display"></strong></span>
+        </div>
+      </div>
+      <div id="event-action-area" style="display:none">
+        <button class="btn-primary" onclick="abrirColaboradores()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Ver Colaboradores
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ COLABORADORES ══════════════════ -->
+  <div id="screen-colaboradores" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button onclick="showScreen('eventos')" style="background:none;border:none;padding:4px 8px 4px 0;color:var(--primary);font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="topbar-title" id="colab-topbar-title">Colaboradores</span>
+      </div>
+      <button class="btn-icon" onclick="recarregarColaboradores()" title="Atualizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+      </button>
+    </div>
+    <div class="content">
+      <div class="stats-row" id="stats-row">
+        <div class="stat-pill"><div class="n n-ausente" id="st-ausente">—</div><div class="l">Ausentes</div></div>
+        <div class="stat-pill"><div class="n n-presente" id="st-presente">—</div><div class="l">Presentes</div></div>
+        <div class="stat-pill"><div class="n n-saiu" id="st-saiu">—</div><div class="l">Saíram</div></div>
+      </div>
+      <div class="search-row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="search-input" placeholder="Buscar colaborador..." oninput="filtrarColaboradores()" />
+      </div>
+      <div id="colab-list" class="colab-list">
+        <div class="empty-state">Carregando colaboradores...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ REGISTRO ══════════════════ -->
+  <div id="screen-registro" class="screen">
+    <div class="topbar">
+      <div class="topbar-left">
+        <button onclick="voltarParaColaboradores()" style="background:none;border:none;padding:4px 8px 4px 0;color:var(--primary);font-size:14px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+        </div>
+        <span class="topbar-title">Registrar Presença</span>
+      </div>
+    </div>
+    <div class="content">
+
+      <!-- Info do colaborador -->
+      <div class="reg-colabinfo">
+        <div class="reg-avatar-ph" id="reg-avatar-ph">?</div>
+        <img class="reg-avatar" id="reg-avatar-img" src="" alt="" style="display:none" onerror="this.style.display='none';document.getElementById('reg-avatar-ph').style.display='flex'" />
+        <div>
+          <div class="reg-nome"    id="reg-nome">—</div>
+          <div class="reg-funcao"  id="reg-funcao">—</div>
+          <div class="reg-status-txt" id="reg-status-txt">—</div>
+        </div>
+      </div>
+
+      <!-- Info de status atual (entrada/saída já registrada) -->
+      <div class="info-box" id="reg-info-box" style="display:none"></div>
+
+      <!-- Geolocalização — mesmo padrão do sistema existente -->
+      <div class="geo-status" id="geo-status">
+        <span class="geo-dot pulsing"></span>
+        <span id="geo-text">Obtendo localização...</span>
+      </div>
+
+      <!-- Foto -->
+      <div>
+        <p class="section-label">Foto para registro</p>
+        <div class="foto-area" id="foto-area">
+          <input type="file" id="foto-input" accept="image/*" capture="environment" onchange="fotoSelecionada(event)" />
+          <div class="foto-placeholder" id="foto-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="48" height="48"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span>Toque para abrir a câmera</span>
+          </div>
+          <img class="foto-preview" id="foto-preview" src="" alt="Foto capturada" />
+        </div>
+      </div>
+
+      <!-- Botões -->
+      <div class="action-btns">
+        <button class="btn-entrada" id="btn-entrada" onclick="registrar('entrada')" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Registrar Entrada
+        </button>
+        <button class="btn-saida" id="btn-saida" onclick="registrar('saida')" style="display:none" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Registrar Saída
+        </button>
+        <button class="btn-outline" onclick="voltarParaColaboradores()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text" id="loading-text">Aguarde...</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════
+let API_BASE = '/public';
+let API_KEY  = 'sisloc_dev_key_2026';
+
+async function loadConfig() {
+  try {
+    const r = await fetch('config.json');
+    if (r.ok) { const c = await r.json(); API_BASE = c.api_base || API_BASE; API_KEY = c.api_key || API_KEY; }
+  } catch (e) { /* usa defaults */ }
+}
+
+const api = {
+  h(json) { return { 'X-Requested-With': 'XMLHttpRequest', 'x-api-key': API_KEY, ...(json ? {'Content-Type':'application/json'} : {}) }; },
+  async get(url)       { const r = await fetch(API_BASE + url, { headers: this.h(false) }); return {ok:r.ok, status:r.status, data:await r.json()}; },
+  async post(url, body){ const r = await fetch(API_BASE + url, {method:'POST', headers:this.h(true), body:JSON.stringify(body)}); return {ok:r.ok, status:r.status, data:await r.json()}; },
+  logout()             { return fetch(API_BASE + '/auth/logout').catch(() => {}); },
+};
+
+// ═══════════════════════════════════════════════════
+//  ESTADO
+// ═══════════════════════════════════════════════════
+let _colaboradores = [];
+let _colab         = null;   // colaborador em registro
+let _fotoB64       = null;   // foto capturada
+let _geoLat        = null;
+let _geoLng        = null;
+let _geoReady      = false;  // true = pode registrar (geo OK ou liberado por timeout)
+let _geoTimer      = null;
+
+// ═══════════════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════════════
+function login() {
+  const email = document.getElementById('i-email').value.trim();
+  const senha = document.getElementById('i-senha').value;
+  let ok = true;
+  clearErr('f-email'); clearErr('f-senha');
+  if (!email || !email.includes('@')) { showErr('f-email'); ok = false; }
+  if (!senha) { showErr('f-senha'); ok = false; }
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Entrando...';
+
+  fetch(API_BASE + '/api/v1/sessao/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': API_KEY },
+    body: JSON.stringify({ email, senha }),
+  })
+  .then(async r => {
+    if (!r.ok) { const e = await r.json().catch(()=>{}); throw new Error(e.error || e.message || 'E-mail ou senha inválidos'); }
+  })
+  .then(() => api.get('/api/v1/presencaapp/eventos'))
+  .then(r => {
+    if (!r.ok) throw new Error(r.data.error || 'Sem permissão');
+    locSet('presenca_auth', '1');
+    showEvents(r.data.eventos || []);
+    showToast('Login realizado!');
+    setTimeout(() => showScreen('eventos'), 300);
+  })
+  .catch(err => {
+    showErr('f-senha'); showToast(err.message, true);
+    btn.disabled = false;
+    btn.innerHTML = svgLogin() + ' Entrar';
+  });
+}
+document.getElementById('i-senha').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); login(); } });
+
+function logout() {
+  api.logout();
+  locDel('presenca_auth'); locDel('presenca_evento_id'); locDel('presenca_evento_nome');
+  document.getElementById('i-email').value = '';
+  document.getElementById('i-senha').value = '';
+  showScreen('login');
+}
+
+// ═══════════════════════════════════════════════════
+//  EVENTOS
+// ═══════════════════════════════════════════════════
+function showEvents(evts) {
+  const sel   = document.getElementById('event-select');
+  const saved = locGet('presenca_evento_id');
+  sel.innerHTML = '<option value="">Selecione um evento...</option>';
+  if (!evts.length) { sel.innerHTML = '<option value="">Nenhum evento disponível</option>'; return; }
+  evts.forEach(e => {
+    const o = document.createElement('option');
+    o.value = e.id;
+    o.textContent = e.nome + (e.local ? ' — ' + e.local : '') + (e.data_inicio ? ' · ' + fmtData(e.data_inicio) : '');
+    sel.appendChild(o);
+  });
+  if (saved) sel.value = saved;
+}
+
+function selecionarEvento() {
+  const sel = document.getElementById('event-select');
+  const eid = sel.value;
+  if (!eid) { sel.focus(); return; }
+  const nome = sel.options[sel.selectedIndex].text;
+  locSet('presenca_evento_id', eid);
+  locSet('presenca_evento_nome', nome);
+  document.getElementById('event-name-display').textContent = nome;
+  document.getElementById('event-badge').classList.add('visible');
+  document.getElementById('event-action-area').style.display = 'block';
+}
+
+function abrirColaboradores() {
+  const eid = locGet('presenca_evento_id');
+  if (!eid) { showToast('Selecione um evento primeiro', true); return; }
+  document.getElementById('colab-topbar-title').textContent = locGet('presenca_evento_nome').split('—')[0].trim() || 'Colaboradores';
+  carregarColaboradores(eid);
+  showScreen('colaboradores');
+}
+
+// ═══════════════════════════════════════════════════
+//  COLABORADORES
+// ═══════════════════════════════════════════════════
+async function carregarColaboradores(eid) {
+  showLoading('Carregando colaboradores...');
+  try {
+    const r = await api.get('/api/v1/presencaapp/evento/' + eid + '/colaboradores');
+    if (!r.ok) throw new Error(r.data.error || 'Erro ao carregar');
+    _colaboradores = r.data.colaboradores || [];
+    renderColaboradores(_colaboradores);
+    updateStats();
+  } catch (err) {
+    document.getElementById('colab-list').innerHTML = '<div class="empty-state">Erro: ' + esc(err.message) + '</div>';
+  } finally {
+    hideLoading();
+  }
+}
+
+function recarregarColaboradores() {
+  const eid = locGet('presenca_evento_id');
+  if (eid) carregarColaboradores(eid);
+}
+
+function filtrarColaboradores() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
+  const f = q ? _colaboradores.filter(c => c.nome.toLowerCase().includes(q) || (c.funcao||'').toLowerCase().includes(q)) : _colaboradores;
+  renderColaboradores(f);
+}
+
+function renderColaboradores(lista) {
+  const el = document.getElementById('colab-list');
+  if (!lista.length) { el.innerHTML = '<div class="empty-state">Nenhum colaborador encontrado</div>'; return; }
+  el.innerHTML = lista.map(c => {
+    const init   = (c.nome||'?')[0].toUpperCase();
+    const avatar = c.foto
+      ? `<img class="colab-avatar" src="${esc(c.foto)}" alt="${esc(c.nome)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="colab-avatar-ph" style="display:none">${init}</div>`
+      : `<div class="colab-avatar-ph">${init}</div>`;
+    const st    = c.status_app || 'ausente';
+    const label = {ausente:'Ausente', presente:'Presente', saiu:'Saiu'}[st] || 'Ausente';
+    const hora  = st === 'saiu' ? fmtHora(c.hora_saida_real) : st === 'presente' ? fmtHora(c.hora_entrada_real) : '';
+    return `<div class="colab-card status-${st}" onclick="abrirRegistro(${c.id_alocacao})">
+      ${avatar}
+      <div class="colab-info"><div class="colab-nome">${esc(c.nome)}</div><div class="colab-funcao">${esc(c.funcao||'—')}</div></div>
+      <div class="colab-status-col">
+        <span class="status-badge badge-${st}">${label}</span>
+        ${hora ? `<span class="status-hora">${hora}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('st-ausente').textContent  = _colaboradores.filter(c => c.status_app === 'ausente').length;
+  document.getElementById('st-presente').textContent = _colaboradores.filter(c => c.status_app === 'presente').length;
+  document.getElementById('st-saiu').textContent     = _colaboradores.filter(c => c.status_app === 'saiu').length;
+}
+
+// ═══════════════════════════════════════════════════
+//  GEOLOCALIZAÇÃO — opção B
+//  Inicia imediatamente, aguarda 12 s, libera com aviso se falhar
+// ═══════════════════════════════════════════════════
+function iniciarGeo() {
+  _geoLat = null; _geoLng = null; _geoReady = false;
+  clearTimeout(_geoTimer);
+  setGeoStatus('pending');
+  checkReady();
+
+  if (!navigator.geolocation) {
+    _geoReady = true;
+    setGeoStatus('unsupported');
+    checkReady();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      clearTimeout(_geoTimer);
+      _geoLat   = pos.coords.latitude;
+      _geoLng   = pos.coords.longitude;
+      _geoReady = true;
+      setGeoStatus('ok');
+      checkReady();
+    },
+    () => {
+      clearTimeout(_geoTimer);
+      _geoReady = true;
+      setGeoStatus('error');
+      checkReady();
+    },
+    { enableHighAccuracy: false, timeout: 25000, maximumAge: 60000 }
+  );
+
+  // Fallback: libera após 13 s independente de resposta
+  _geoTimer = setTimeout(() => {
+    if (!_geoReady) {
+      _geoReady = true;
+      setGeoStatus('timeout');
+      checkReady();
+    }
+  }, 13000);
+}
+
+function setGeoStatus(state) {
+  const dot  = document.querySelector('#geo-status .geo-dot');
+  const txt  = document.getElementById('geo-text');
+  const wrap = document.getElementById('geo-status');
+  if (!wrap) return;
+
+  dot.classList.remove('pulsing');
+  wrap.className = 'geo-status';
+
+  const map = {
+    pending:     { cls: '',     dot: 'pulsing', text: 'Obtendo localização...' },
+    ok:          { cls: 'ok',   dot: '',        text: `📍 ${_geoLat?.toFixed(6)}, ${_geoLng?.toFixed(6)}` },
+    error:       { cls: 'warn', dot: '',        text: '⚠️ Sem localização — registrará assim mesmo' },
+    timeout:     { cls: 'warn', dot: '',        text: '⚠️ Sem localização — registrará assim mesmo' },
+    unsupported: { cls: 'warn', dot: '',        text: '⚠️ GPS não suportado neste dispositivo' },
+  };
+  const s = map[state] || map.pending;
+  wrap.classList.add(...(s.cls ? [s.cls] : []));
+  txt.textContent = s.text;
+  if (s.dot) dot.classList.add(s.dot);
+}
+
+function checkReady() {
+  if (!_colab) return;
+  const canSubmit = _fotoB64 !== null && _geoReady;
+  const st = _colab.status_app || 'ausente';
+  if (st === 'ausente')  document.getElementById('btn-entrada').disabled = !canSubmit;
+  if (st === 'presente') document.getElementById('btn-saida').disabled   = !canSubmit;
+}
+
+// ═══════════════════════════════════════════════════
+//  REGISTRO DE PRESENÇA
+// ═══════════════════════════════════════════════════
+function abrirRegistro(idAlocacao) {
+  _colab   = _colaboradores.find(c => c.id_alocacao == idAlocacao);
+  _fotoB64 = null;
+  if (!_colab) return;
+
+  // Avatar
+  const ph  = document.getElementById('reg-avatar-ph');
+  const img = document.getElementById('reg-avatar-img');
+  ph.textContent = (_colab.nome||'?')[0].toUpperCase();
+  if (_colab.foto) { img.src = _colab.foto; img.style.display = 'block'; ph.style.display = 'none'; }
+  else             { img.style.display = 'none'; ph.style.display = 'flex'; }
+
+  document.getElementById('reg-nome').textContent   = _colab.nome;
+  document.getElementById('reg-funcao').textContent = _colab.funcao || '—';
+
+  const st      = _colab.status_app || 'ausente';
+  const sTxt    = document.getElementById('reg-status-txt');
+  const infoBox = document.getElementById('reg-info-box');
+  const btnE    = document.getElementById('btn-entrada');
+  const btnS    = document.getElementById('btn-saida');
+
+  // Reset foto
+  document.getElementById('foto-input').value = '';
+  document.getElementById('foto-preview').className = 'foto-preview';
+  document.getElementById('foto-placeholder').style.display = '';
+  document.getElementById('foto-area').classList.remove('has-foto');
+
+  if (st === 'ausente') {
+    sTxt.textContent = 'Ainda não registrou presença hoje';
+    sTxt.style.color = 'var(--text-muted)';
+    infoBox.style.display = 'none';
+    btnE.style.display = ''; btnE.disabled = true;
+    btnS.style.display = 'none';
+  } else if (st === 'presente') {
+    const he = fmtHora(_colab.hora_entrada_real);
+    sTxt.textContent = '✅ Entrada às ' + he;
+    sTxt.style.color = 'var(--success)';
+    infoBox.style.display = 'block';
+    infoBox.textContent = 'Já registrou entrada às ' + he + '. Registre a saída quando for embora.';
+    btnE.style.display = 'none';
+    btnS.style.display = ''; btnS.disabled = true;
+  } else {
+    const he = fmtHora(_colab.hora_entrada_real);
+    const hs = fmtHora(_colab.hora_saida_real);
+    sTxt.textContent = '🚪 Entrada ' + he + ' · Saída ' + hs;
+    sTxt.style.color = 'var(--primary)';
+    infoBox.style.display = 'block';
+    infoBox.textContent = 'Presença completa registrada. Entrada ' + he + ', saída ' + hs + '.';
+    btnE.style.display = 'none';
+    btnS.style.display = 'none';
+  }
+
+  // Inicia geo imediatamente (mesmo padrão do sistema existente)
+  iniciarGeo();
+  showScreen('registro');
+}
+
+function voltarParaColaboradores() {
+  clearTimeout(_geoTimer);
+  showScreen('colaboradores');
+}
+
+function fotoSelecionada(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    _fotoB64 = e.target.result;
+    const prev = document.getElementById('foto-preview');
+    prev.src = _fotoB64; prev.classList.add('visible');
+    document.getElementById('foto-placeholder').style.display = 'none';
+    document.getElementById('foto-area').classList.add('has-foto');
+    checkReady();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function registrar(tipo) {
+  if (!_colab || !_fotoB64 || !_geoReady) return;
+
+  const btnId = tipo === 'entrada' ? 'btn-entrada' : 'btn-saida';
+  const btn   = document.getElementById(btnId);
+  const label = tipo === 'entrada' ? 'Registrar Entrada' : 'Registrar Saída';
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Registrando...';
+
+  try {
+    const r = await api.post('/api/v1/presencaapp/' + tipo, {
+      id_alocacao: _colab.id_alocacao,
+      foto: _fotoB64,
+      lat:  _geoLat  ?? 0,
+      lng:  _geoLng  ?? 0,
+    });
+    if (!r.ok) throw new Error(r.data.error || 'Erro ao registrar');
+
+    const hora = r.data.hora || '';
+    const aviso = (!_geoLat && !_geoLng) ? ' (sem GPS)' : '';
+    showToast(tipo === 'entrada' ? `✅ Entrada registrada${hora ? ' às ' + hora : ''}${aviso}` : `🚪 Saída registrada${hora ? ' às ' + hora : ''}${aviso}`);
+
+    // Atualiza estado local (evita reload completo)
+    const idx = _colaboradores.findIndex(c => c.id_alocacao == _colab.id_alocacao);
+    if (idx >= 0) {
+      const now = new Date().toTimeString().slice(0, 8);
+      if (tipo === 'entrada') { _colaboradores[idx].status_app = 'presente'; _colaboradores[idx].hora_entrada_real = now; }
+      else                    { _colaboradores[idx].status_app = 'saiu';     _colaboradores[idx].hora_saida_real   = now; }
+    }
+    updateStats();
+    clearTimeout(_geoTimer);
+    setTimeout(() => showScreen('colaboradores'), 800);
+  } catch (err) {
+    showToast(err.message, true);
+    btn.disabled = false;
+    btn.innerHTML = (tipo === 'entrada' ? svgEntrada() + ' Registrar Entrada' : svgSaida() + ' Registrar Saída');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function showToast(msg, isErr, isWarn) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast' + (isErr ? ' error' : isWarn ? ' warn' : '');
+  t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => t.classList.remove('show'), 4000);
+}
+function showLoading(msg) { document.getElementById('loading-text').textContent = msg || 'Aguarde...'; document.getElementById('loading-overlay').classList.add('show'); }
+function hideLoading()    { document.getElementById('loading-overlay').classList.remove('show'); }
+function showErr(fid)  { document.getElementById(fid).classList.add('has-error'); }
+function clearErr(fid) { document.getElementById(fid).classList.remove('has-error'); }
+function locSet(k,v) { localStorage.setItem(k, v); }
+function locGet(k)   { return localStorage.getItem(k) || ''; }
+function locDel(k)   { localStorage.removeItem(k); }
+function esc(s) { const d = document.createElement('div'); d.textContent = String(s||''); return d.innerHTML; }
+function fmtData(d) { if (!d) return ''; const [y,m,day] = d.split('-'); return `${day}/${m}/${y}`; }
+function fmtHora(h) { return h ? h.slice(0,5) : '—'; }
+function svgLogin()  { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>'; }
+function svgEntrada(){ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'; }
+function svgSaida()  { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>'; }
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+(async () => {
+  await loadConfig();
+  if (locGet('presenca_auth') === '1') {
+    try {
+      const r = await api.get('/api/v1/presencaapp/eventos');
+      if (!r.ok) throw new Error('Sessão expirada');
+      showEvents(r.data.eventos || []);
+      const savedId = locGet('presenca_evento_id');
+      if (savedId) {
+        document.getElementById('event-badge').classList.add('visible');
+        document.getElementById('event-name-display').textContent = locGet('presenca_evento_nome');
+        document.getElementById('event-action-area').style.display = 'block';
+      }
+      showScreen('eventos');
+    } catch (e) {
+      locDel('presenca_auth');
+      showScreen('login');
+    }
+  } else {
+    showScreen('login');
+  }
+})();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
