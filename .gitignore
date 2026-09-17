@@ -1,5 +1,8 @@
 # Dependencies
 /vendor/
+/node_modules/
+__pycache__/
+*.pyc
 
 # Generated agents (created by composer scripts)
 /agents/

@@ -1322,13 +1322,14 @@ body.mini #main{margin-left:64px}
 [data-tooltip]{position:relative;cursor:default}
 [data-tooltip]::after{content:attr(data-tooltip);position:absolute;z-index:var(--z-tooltip);bottom:calc(100% + 10px);left:50%;transform:translateX(-50%) translateY(6px);background:var(--bg-elevated);color:var(--text-1);font-size:12px;font-weight:500;line-height:1.4;padding:7px 12px;border-radius:8px;border:1px solid var(--bg-border);box-shadow:var(--shadow-md);white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;font-family:'Inter',sans-serif}
 [data-tooltip]:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
-[data-tooltip="red"]::after{background:var(--neon-red);border-color:var(--neon-red);color:#fff;box-shadow:0 4px 16px var(--neon-red-glow)}
-[data-tooltip="green"]::after{background:var(--neon-green);border-color:var(--neon-green);color:#fff;box-shadow:0 4px 16px var(--neon-green-glow)}
-[data-tooltip="cyan"]::after{background:var(--neon-cyan);border-color:var(--neon-cyan);color:#fff;box-shadow:0 4px 16px var(--neon-cyan-glow)}
-[data-tooltip="blue"]::after{background:var(--neon-blue);border-color:var(--neon-blue);color:#fff;box-shadow:0 4px 16px var(--neon-blue-glow)}
-[data-tooltip="purple"]::after{background:var(--neon-purple);border-color:var(--neon-purple);color:#fff;box-shadow:0 4px 16px var(--neon-purple-glow)}
-[data-tooltip="orange"]::after{background:var(--neon-orange);border-color:var(--neon-orange);color:#fff;box-shadow:0 4px 16px var(--neon-orange-glow)}
-[data-tooltip="yellow"]::after{background:var(--neon-yellow);border-color:var(--neon-yellow);color:#fff;box-shadow:0 4px 16px var(--neon-yellow-glow)}
+/* data-tooltip-color escolhe a cor do balao sem afetar o texto (que vem de data-tooltip) */
+[data-tooltip-color="red"]::after{background:var(--neon-red);border-color:var(--neon-red);color:#fff;box-shadow:0 4px 16px var(--neon-red-glow)}
+[data-tooltip-color="green"]::after{background:var(--neon-green);border-color:var(--neon-green);color:#fff;box-shadow:0 4px 16px var(--neon-green-glow)}
+[data-tooltip-color="cyan"]::after{background:var(--neon-cyan);border-color:var(--neon-cyan);color:#fff;box-shadow:0 4px 16px var(--neon-cyan-glow)}
+[data-tooltip-color="blue"]::after{background:var(--neon-blue);border-color:var(--neon-blue);color:#fff;box-shadow:0 4px 16px var(--neon-blue-glow)}
+[data-tooltip-color="purple"]::after{background:var(--neon-purple);border-color:var(--neon-purple);color:#fff;box-shadow:0 4px 16px var(--neon-purple-glow)}
+[data-tooltip-color="orange"]::after{background:var(--neon-orange);border-color:var(--neon-orange);color:#fff;box-shadow:0 4px 16px var(--neon-orange-glow)}
+[data-tooltip-color="yellow"]::after{background:var(--neon-yellow);border-color:var(--neon-yellow);color:#fff;box-shadow:0 4px 16px var(--neon-yellow-glow)}
 
 /* ==========================================
    FECHAMENTO - Tabs e Componentes

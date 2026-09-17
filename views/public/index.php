@@ -11,7 +11,7 @@ require_once $appRoot . '/vendor/autoload.php';
 // CORS: Permitir requisições cross-origin para integração com frontend
 $corsOrigin = '*';
 if (isset($_SERVER['HTTP_ORIGIN'])) {
-    $allowedOrigins = ['https://profox.sisloc.online', 'https://profoxmt.sisloc.online', 'https://profoxba.sisloc.online', 'https://localhost', 'http://localhost'];
+    $allowedOrigins = ['https://capital.sisloc.online', 'https://localhost', 'http://localhost'];
     $origin = $_SERVER['HTTP_ORIGIN'];
     if (in_array($origin, $allowedOrigins)) {
         $corsOrigin = $origin;
@@ -369,7 +369,7 @@ $app->router()->get('/funcoes', [App\Controllers\PublicoCategoriaController::cla
 // Tratamento para requisições OPTIONS (CORS preflight)
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     if (isset($_SERVER['HTTP_ORIGIN'])) {
-    $allowedOrigins = ['https://profox.sisloc.online', 'https://profoxmt.sisloc.online', 'https://profoxba.sisloc.online', 'https://localhost', 'http://localhost'];
+    $allowedOrigins = ['https://capital.sisloc.online', 'https://localhost', 'http://localhost'];
     $origin = $_SERVER['HTTP_ORIGIN'];
     if (in_array($origin, $allowedOrigins)) {
         header("Access-Control-Allow-Origin: $origin");

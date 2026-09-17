@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $corsOrigin = '';
 if (isset($_SERVER['HTTP_ORIGIN'])) {
-    $allowedOrigins = ['https://profox.sisloc.online', 'https://profoxmt.sisloc.online', 'https://profoxba.sisloc.online', 'http://localhost', 'https://localhost'];
+    $allowedOrigins = ['https://capital.sisloc.online', 'http://localhost', 'https://localhost'];
     $origin = $_SERVER['HTTP_ORIGIN'];
     if (in_array($origin, $allowedOrigins)) {
         $corsOrigin = $origin;

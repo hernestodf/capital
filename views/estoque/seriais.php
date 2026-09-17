@@ -15,6 +15,13 @@ if (!empty($seriais)) {
         'action' => 'historico-serial',
         'icon' => '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
     ];
+    $actionBtns[] = [
+        'label' => 'Reimprimir QR',
+        'variant' => 'cyan',
+        'size' => 'sm',
+        'action' => 'reimprimir-qr',
+        'icon' => '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zM7 5h10v6H7V5z"/></svg>',
+    ];
     foreach ($seriais as $s) {
         $statusBadge = '';
         if ($s['status'] === 'ATIVO') {
@@ -27,7 +34,9 @@ if (!empty($seriais)) {
 
         $rows[] = [
             'data-id' => $s['id'],
+            ['html' => true, 'content' => '<input type="checkbox" class="chk-serial" value="' . (int)$s['id'] . '">'],
             ['html' => true, 'content' => '<span class="td-name">' . htmlspecialchars($s['serial']) . '</span>'],
+            htmlspecialchars($s['numero_serie'] ?? '-'),
             ['html' => true, 'content' => $statusBadge],
             htmlspecialchars($s['motivo'] ?? '-'),
         ];
@@ -81,6 +90,14 @@ $baseUrl = rtrim(\App\Core\Env::get('BASE_URL', ''), '/');
           <span class="card-title">Códigos de Barras Cadastrados</span>
           <div style="display:flex;gap:8px">
             <a href="<?= $baseUrl ?>/estoque" class="btn btn-sm btn-gray">Voltar</a>
+            <button type="button" class="btn btn-sm btn-purple" data-action="gerar-faixa">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+              Gerar Faixa + QR
+            </button>
+            <button type="button" class="btn btn-sm btn-gray" id="btn-imprimir-selecionados" data-action="imprimir-selecionados" disabled>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a1 1 0 001-1v-4a1 1 0 00-1-1H9a1 1 0 00-1 1v4a1 1 0 001 1zM7 5h10v6H7V5z"/></svg>
+              Imprimir selecionados
+            </button>
             <button type="button" class="btn btn-sm btn-cyan" data-action="abrir-modal-serial">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
               Novo Código
@@ -106,7 +123,9 @@ $baseUrl = rtrim(\App\Core\Env::get('BASE_URL', ''), '/');
               'paginated'        => true,
               'perPage'          => 15,
               'headers' => [
+                  ['label' => '<input type="checkbox" id="chk-all-seriais">'],
                   ['label' => 'Código de Barras', 'sortable' => true],
+                  ['label' => 'Nº Série (fabricante)', 'sortable' => true],
                   ['label' => 'Status', 'sortable' => true],
                   ['label' => 'Motivo', 'sortable' => true]
               ],
@@ -125,6 +144,7 @@ $baseUrl = rtrim(\App\Core\Env::get('BASE_URL', ''), '/');
         'title' => 'Adicionar Código de Barras',
         'subtitle' => 'Cadastrar novo código de barras para o produto',
         'body' => '<div class="fg"><div class="fl">Código de Barras</div><input type="text" id="modal-serial-serial" class="fi" placeholder="Ex: SN123456789"/></div>
+                   <div class="fg" style="margin-top:12px"><div class="fl">Nº de Série do Fabricante (opcional)</div><input type="text" id="modal-serial-numero-serie" class="fi" placeholder="Ex: impresso na etiqueta do fabricante"/></div>
                    <div class="fg" style="margin-top:12px"><div class="fl">Status</div><select id="modal-serial-status" class="fi" onchange="toggleMotivo()"><option value="ATIVO">Ativo</option><option value="MANUTENCAO">Manutencao</option><option value="VENDER">Vender</option></select></div>
                    <div class="fg" style="margin-top:12px;display:none" id="modal-serial-motivo-group"><div class="fl">Motivo (obrigatorio para manutencao)</div><input type="text" id="modal-serial-motivo" class="fi" placeholder="Motivo da manutencao"/></div>
                    <input type="hidden" id="modal-serial-id" value=""/>
@@ -161,6 +181,28 @@ $baseUrl = rtrim(\App\Core\Env::get('BASE_URL', ''), '/');
         'footer' => '<button class="btn btn-gray" data-action="close-modal" data-target="modal-historico-serial">Fechar</button>'
     ]) ?>
 
+    <!-- MODAL: Gerar Faixa de Códigos + QR Code -->
+    <?= renderModal([
+        'id' => 'modal-gerar-faixa',
+        'variant' => 'form',
+        'title' => 'Gerar Faixa de Códigos',
+        'subtitle' => 'Gera uma sequência de códigos (ex: TV-5001 até TV-5009) e cadastra no estoque',
+        'body' => '<div class="fg"><div class="fl">Prefixo</div><input type="text" id="faixa-prefixo" class="fi" placeholder="Ex: TV"/></div>
+                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+                     <div class="fg"><div class="fl">Sequencial inicial</div><input type="number" id="faixa-inicial" class="fi" placeholder="5001"/></div>
+                     <div class="fg"><div class="fl">Sequencial final</div><input type="number" id="faixa-final" class="fi" placeholder="5009"/></div>
+                   </div>
+                   <div id="faixa-preview" style="margin-top:16px;display:none">
+                     <div class="fl">Pré-visualização</div>
+                     <div id="faixa-preview-resumo" style="font-size:13px;color:var(--text-3);margin-bottom:8px"></div>
+                     <div id="faixa-preview-lista" style="max-height:160px;overflow-y:auto;font-family:monospace;font-size:12px;background:var(--bg-2);border-radius:6px;padding:10px"></div>
+                   </div>
+                   <input type="hidden" id="faixa-produto-id" value="' . $produto['id'] . '"/>',
+        'footer' => '<button class="btn btn-gray" data-action="close-modal" data-target="modal-gerar-faixa">Cancelar</button>
+                     <button class="btn btn-purple" data-action="pre-visualizar-faixa" id="btn-pre-visualizar-faixa">Pré-visualizar</button>
+                     <button class="btn btn-green" data-action="confirmar-faixa" id="btn-confirmar-faixa" style="display:none">Gerar e cadastrar no estoque</button>'
+    ]) ?>
+
 <script>
 const produtoId = <?= $produto['id'] ?>;
 
@@ -176,19 +218,58 @@ document.addEventListener('DOMContentLoaded', function() {
     'edit-serial': function(el) { const id = el.dataset.id; if (id) editSerial(id); },
     'delete-serial': function(el) { const id = el.dataset.id; if (id) deleteSerial(id); },
     'historico-serial': function(el) { const id = el.dataset.id; if (id) historicoSerial(id, el.dataset.nome || ''); },
+    'reimprimir-qr': function(el) { const id = el.dataset.id; if (id) reimprimirQr(id); },
+    'gerar-faixa': function() { abrirModalGerarFaixa(); },
+    'pre-visualizar-faixa': function() { preVisualizarFaixa(); },
+    'confirmar-faixa': function() { confirmarFaixa(); },
+    'imprimir-selecionados': function() { imprimirSelecionados(); },
+  });
+
+  const chkAll = document.getElementById('chk-all-seriais');
+  if (chkAll) {
+    chkAll.addEventListener('change', function() {
+      document.querySelectorAll('.chk-serial').forEach(function(c) { c.checked = chkAll.checked; });
+      atualizarBotaoImprimirSelecionados();
+    });
+  }
+  document.body.addEventListener('change', function(e) {
+    if (e.target.classList && e.target.classList.contains('chk-serial')) {
+      atualizarBotaoImprimirSelecionados();
+    }
   });
 });
 
-function abrirModalSerial(id, serial, status, motivo) {
+function atualizarBotaoImprimirSelecionados() {
+  const selecionados = document.querySelectorAll('.chk-serial:checked').length;
+  const btn = document.getElementById('btn-imprimir-selecionados');
+  if (btn) {
+    btn.disabled = selecionados === 0;
+    btn.textContent = selecionados > 0 ? 'Imprimir selecionados (' + selecionados + ')' : 'Imprimir selecionados';
+  }
+}
+
+function reimprimirQr(id) {
+  window.open(BASE_URL + '/seriais/qrcode/' + id, '_blank');
+}
+
+function imprimirSelecionados() {
+  const ids = Array.from(document.querySelectorAll('.chk-serial:checked')).map(function(c) { return c.value; });
+  if (ids.length === 0) return;
+  window.open(BASE_URL + '/seriais/qrcode-lote?ids=' + ids.join(','), '_blank');
+}
+
+function abrirModalSerial(id, serial, status, motivo, numeroSerie) {
   if (id) {
     document.getElementById('modal-serial-id').value = id;
     document.getElementById('modal-serial-serial').value = serial || '';
+    document.getElementById('modal-serial-numero-serie').value = numeroSerie || '';
     document.getElementById('modal-serial-status').value = status || 'ATIVO';
     document.getElementById('modal-serial-motivo').value = motivo || '';
     document.querySelector('#modal-serial .modal-title').textContent = 'Editar Código de Barras';
   } else {
     document.getElementById('modal-serial-id').value = '';
     document.getElementById('modal-serial-serial').value = '';
+    document.getElementById('modal-serial-numero-serie').value = '';
     document.getElementById('modal-serial-status').value = 'ATIVO';
     document.getElementById('modal-serial-motivo').value = '';
     document.querySelector('#modal-serial .modal-title').textContent = 'Adicionar Código de Barras';
@@ -201,6 +282,7 @@ function abrirModalSerial(id, serial, status, motivo) {
 function salvarSerial() {
   const id = document.getElementById('modal-serial-id').value;
   const serial = document.getElementById('modal-serial-serial').value.trim();
+  const numeroSerie = document.getElementById('modal-serial-numero-serie').value.trim();
   const status = document.getElementById('modal-serial-status').value;
   const motivo = document.getElementById('modal-serial-motivo').value.trim();
   const produtoId = document.getElementById('modal-serial-produto-id').value;
@@ -219,7 +301,7 @@ function salvarSerial() {
     fetch(BASE_URL + '/seriais/update/' + id, {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: '_csrf_token=' + CSRF_TOKEN + '&serial=' + encodeURIComponent(serial) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
+      body: '_csrf_token=' + CSRF_TOKEN + '&serial=' + encodeURIComponent(serial) + '&numero_serie=' + encodeURIComponent(numeroSerie) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
     })
     .then(r => r.json())
     .then(function(data) {
@@ -236,7 +318,7 @@ function salvarSerial() {
     fetch(BASE_URL + '/seriais/store', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&serial=' + encodeURIComponent(serial) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
+      body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&serial=' + encodeURIComponent(serial) + '&numero_serie=' + encodeURIComponent(numeroSerie) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
     })
     .then(r => r.json())
     .then(function(data) {
@@ -329,7 +411,7 @@ function editSerial(serialId) {
     .then(r => r.json())
     .then(data => {
       if (data.success && data.data) {
-        abrirModalSerial(data.data.id, data.data.serial, data.data.status, data.data.motivo || '');
+        abrirModalSerial(data.data.id, data.data.serial, data.data.status, data.data.motivo || '', data.data.numero_serie || '');
       }
     })
     .catch(() => showToast('red', 'Erro', 'Erro ao carregar dados do código'));
@@ -435,6 +517,115 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!serialId) return;
   });
 });
+
+// ── Gerar Faixa de Códigos + QR ──────────────────────────────────────────
+
+function abrirModalGerarFaixa() {
+  document.getElementById('faixa-prefixo').value = '';
+  document.getElementById('faixa-inicial').value = '';
+  document.getElementById('faixa-final').value = '';
+  document.getElementById('faixa-preview').style.display = 'none';
+  document.getElementById('faixa-preview-lista').innerHTML = '';
+  document.getElementById('btn-pre-visualizar-faixa').style.display = 'inline-flex';
+  document.getElementById('btn-confirmar-faixa').style.display = 'none';
+  openModal('modal-gerar-faixa');
+}
+
+function lerFaixaForm() {
+  const prefixo = document.getElementById('faixa-prefixo').value.trim();
+  const inicial = document.getElementById('faixa-inicial').value.trim();
+  const final = document.getElementById('faixa-final').value.trim();
+
+  if (!prefixo) {
+    showToast('yellow', 'Atencao', 'Prefixo é obrigatório');
+    return null;
+  }
+  if (inicial === '' || final === '') {
+    showToast('yellow', 'Atencao', 'Sequencial inicial e final são obrigatórios');
+    return null;
+  }
+  if (parseInt(inicial, 10) > parseInt(final, 10)) {
+    showToast('yellow', 'Atencao', 'O sequencial inicial não pode ser maior que o final');
+    return null;
+  }
+
+  return { prefixo: prefixo, inicial: inicial, final: final };
+}
+
+function preVisualizarFaixa() {
+  const dados = lerFaixaForm();
+  if (!dados) return;
+
+  fetch(BASE_URL + '/seriais/generate-range', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: '_csrf_token=' + CSRF_TOKEN + '&prefixo=' + encodeURIComponent(dados.prefixo)
+        + '&inicial=' + dados.inicial + '&final=' + dados.final + '&preview=1'
+  })
+  .then(r => r.json())
+  .then(function(data) {
+    if (!data.success) {
+      showToast('red', 'Erro', data.message || 'Erro ao pré-visualizar faixa');
+      return;
+    }
+    const info = data.data;
+    let resumo = 'Serão gerados ' + info.total + ' código(s).';
+    if (info.existentes.length > 0) {
+      resumo += ' ⚠️ ' + info.existentes.length + ' já existe(m) e não serão duplicados: ' + info.existentes.join(', ');
+    }
+    document.getElementById('faixa-preview-resumo').textContent = resumo;
+    document.getElementById('faixa-preview-lista').innerHTML = info.codigos.map(function(c) {
+      const existe = info.existentes.indexOf(c) !== -1;
+      return '<div' + (existe ? ' style="color:var(--red);text-decoration:line-through"' : '') + '>' + escapeHtml(c) + '</div>';
+    }).join('');
+    document.getElementById('faixa-preview').style.display = 'block';
+    document.getElementById('btn-pre-visualizar-faixa').style.display = 'none';
+    document.getElementById('btn-confirmar-faixa').style.display = 'inline-flex';
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar requisicao'));
+}
+
+function confirmarFaixa() {
+  const dados = lerFaixaForm();
+  if (!dados) return;
+
+  const btn = document.getElementById('btn-confirmar-faixa');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+
+  fetch(BASE_URL + '/seriais/generate-range', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&prefixo=' + encodeURIComponent(dados.prefixo)
+        + '&inicial=' + dados.inicial + '&final=' + dados.final
+  })
+  .then(r => r.json())
+  .then(function(data) {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+
+    if (!data.success) {
+      showToast('red', 'Erro', data.message || 'Erro ao gerar faixa');
+      return;
+    }
+
+    showToast('green', 'Sucesso', data.message);
+    closeModal('modal-gerar-faixa');
+
+    // Abre a impressão dos códigos recém-gerados (o backend só imprime o que
+    // realmente foi cadastrado, mesmo se alguns da faixa já existiam antes)
+    if (data.data.codigos && data.data.codigos.length > 0) {
+      window.open(BASE_URL + '/seriais/qrcode-lote?codigos=' + encodeURIComponent(data.data.codigos.join(',')), '_blank');
+    }
+    setTimeout(() => { window.location.reload(); }, 1500);
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+    showToast('red', 'Erro', 'Erro ao processar requisicao');
+  });
+}
 </script>
 
 <?php require dirname(__DIR__) . '/layout/footer.php'; ?>

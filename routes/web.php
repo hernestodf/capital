@@ -311,6 +311,9 @@ $app->router()->group('/seriais', function($router) {
     $router->post('/update/{id}',        [App\Controllers\SerialProdutoController::class, 'update']);
     $router->post('/update-status/{id}', [App\Controllers\SerialProdutoController::class, 'updateStatus']);
     $router->post('/delete/{id}',        [App\Controllers\SerialProdutoController::class, 'delete']);
+    $router->post('/generate-range',     [App\Controllers\SerialProdutoController::class, 'generateRange']);
+    $router->get('/qrcode/{id}',         [App\Controllers\SerialProdutoController::class, 'qrCode']);
+    $router->get('/qrcode-lote',         [App\Controllers\SerialProdutoController::class, 'qrCodeLote']);
 }, $authCsrf);
 
 // Montagem (AJAX)

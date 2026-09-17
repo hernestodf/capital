@@ -73,7 +73,9 @@ class SerialProdutoService extends BaseService
     {
         $data['serial'] = trim(strip_tags($data['serial'] ?? ''));
         $data['motivo'] = trim(strip_tags($data['motivo'] ?? ''));
-        
+        $numeroSerie = trim(strip_tags($data['numero_serie'] ?? ''));
+        $data['numero_serie'] = $numeroSerie !== '' ? $numeroSerie : null;
+
         if (!isset($data['status'])) {
             $data['status'] = 'ATIVO';
         }
@@ -88,6 +90,16 @@ class SerialProdutoService extends BaseService
     public function findByProduto(int $idProduto): array
     {
         return $this->repository->findByProduto($idProduto);
+    }
+
+    /**
+     * Filtra uma lista de códigos, retornando só os que realmente existem
+     * cadastrados — nunca imprime QR de texto arbitrário não registrado.
+     * @return string[]
+     */
+    public function filterExisting(array $codigos): array
+    {
+        return $this->repository->findExisting($codigos);
     }
 
     public function delete(int $id): int
@@ -124,5 +136,71 @@ class SerialProdutoService extends BaseService
         }
 
         return $this->repository->storeBatch($idProduto, $serials, $status);
+    }
+
+    /**
+     * Limite de seguranca por geracao — evita picos absurdos por erro de digitacao.
+     */
+    public const MAX_RANGE_SIZE = 500;
+
+    /**
+     * Gera a lista de codigos "PREFIXO-N" para uma faixa (inicial..final).
+     * @return string[]
+     */
+    public function buildRangeCodes(string $prefixo, int $inicial, int $final): array
+    {
+        $prefixo = trim($prefixo);
+        if ($prefixo === '') {
+            throw new \InvalidArgumentException('Prefixo é obrigatório');
+        }
+        if ($inicial > $final) {
+            throw new \InvalidArgumentException('O sequencial inicial não pode ser maior que o final');
+        }
+
+        $total = $final - $inicial + 1;
+        if ($total > self::MAX_RANGE_SIZE) {
+            throw new \InvalidArgumentException(
+                "Faixa grande demais ({$total} códigos) — máximo permitido: " . self::MAX_RANGE_SIZE
+            );
+        }
+
+        $codigos = [];
+        for ($i = $inicial; $i <= $final; $i++) {
+            $codigos[] = $prefixo . '-' . $i;
+        }
+        return $codigos;
+    }
+
+    /**
+     * Pré-visualiza uma geração por faixa: monta a lista e indica quais já existem,
+     * sem inserir nada no banco.
+     * @return array ['codigos' => string[], 'existentes' => string[], 'total' => int]
+     */
+    public function previewRange(string $prefixo, int $inicial, int $final): array
+    {
+        $codigos = $this->buildRangeCodes($prefixo, $inicial, $final);
+        $existentes = $this->repository->findExisting($codigos);
+        return [
+            'codigos'    => $codigos,
+            'existentes' => array_values($existentes),
+            'total'      => count($codigos),
+        ];
+    }
+
+    /**
+     * Gera a faixa e cadastra de fato no estoque (via storeBatch, reaproveitando
+     * a checagem de duplicata e a transação já existentes).
+     * @return array ['success' => int, 'duplicates' => int, 'errors' => array, 'codigos' => string[]]
+     */
+    public function generateRange(int $idProduto, string $prefixo, int $inicial, int $final): array
+    {
+        if (empty($idProduto)) {
+            throw new \InvalidArgumentException('Produto é obrigatório');
+        }
+
+        $codigos = $this->buildRangeCodes($prefixo, $inicial, $final);
+        $result = $this->storeBatch($idProduto, $codigos, 'ATIVO');
+        $result['codigos'] = $codigos;
+        return $result;
     }
 }

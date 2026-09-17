@@ -59,6 +59,7 @@ class SerialProdutoController extends Controller
             $data = [
                 'id_produto' => $this->post('id_produto'),
                 'serial' => $this->post('serial'),
+                'numero_serie' => $this->post('numero_serie', ''),
                 'status' => $this->post('status', 'ATIVO'),
                 'motivo' => $this->post('motivo', ''),
             ];
@@ -86,6 +87,7 @@ class SerialProdutoController extends Controller
         try {
             $data = [
                 'serial' => $this->post('serial'),
+                'numero_serie' => $this->post('numero_serie', ''),
                 'status' => $this->post('status'),
                 'motivo' => $this->post('motivo', ''),
             ];
@@ -273,5 +275,127 @@ class SerialProdutoController extends Controller
         } catch (\Exception $e) {
             return $this->json(['success' => false, 'message' => 'Erro ao processar lote: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Gera códigos por faixa (prefixo + inicial + final).
+     *
+     * Com preview=1: só monta a lista e informa quais já existem, sem inserir.
+     * Sem preview: gera e cadastra de fato no estoque (via storeBatch).
+     */
+    public function generateRange(): Response
+    {
+        if (!Rbac::check('estoque.editar')) {
+            return $this->json(['success' => false, 'message' => 'Acesso nao autorizado'], 403);
+        }
+
+        $csrfToken = $this->post('_csrf_token');
+        if (!Csrf::validate($csrfToken)) {
+            return $this->json(['error' => 'Token CSRF inválido'], 400);
+        }
+
+        $idProduto = (int) $this->post('id_produto');
+        $prefixo   = trim((string) $this->post('prefixo', ''));
+        $inicial   = $this->post('inicial');
+        $final     = $this->post('final');
+        $preview   = (bool) $this->post('preview', false);
+
+        if ($inicial === null || $inicial === '' || $final === null || $final === '' || !ctype_digit((string)$inicial) || !ctype_digit((string)$final)) {
+            return $this->json(['success' => false, 'message' => 'Sequencial inicial e final devem ser números inteiros'], 400);
+        }
+
+        try {
+            if ($preview) {
+                $result = $this->service->previewRange($prefixo, (int)$inicial, (int)$final);
+                return $this->json(['success' => true, 'data' => $result]);
+            }
+
+            if (empty($idProduto)) {
+                return $this->json(['success' => false, 'message' => 'Produto é obrigatório'], 400);
+            }
+
+            $result = $this->service->generateRange($idProduto, $prefixo, (int)$inicial, (int)$final);
+
+            $message = sprintf(
+                '%d código(s) gerado(s) e cadastrado(s) no estoque, %d já existente(s)',
+                $result['success'],
+                $result['duplicates']
+            );
+
+            return $this->json([
+                'success' => true,
+                'message' => $message,
+                'data'    => $result,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['success' => false, 'message' => $e->getMessage()], 400);
+        } catch (\Throwable $e) {
+            return $this->json(['success' => false, 'message' => 'Erro ao gerar faixa: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Página de impressão do QR Code de um único código de barras (reimpressão).
+     * Não gera nenhum código novo — usa exatamente o serial já existente.
+     */
+    public function qrCode($id): Response
+    {
+        if (!Rbac::check('estoque.listar')) {
+            return $this->redirect($this->baseUrl . '/dashboard');
+        }
+
+        $serial = $this->service->find((int)$id);
+        if (!$serial) {
+            $_SESSION['error'] = 'Código não encontrado.';
+            return $this->redirect($this->baseUrl . '/estoque');
+        }
+
+        return $this->view('estoque/qrcode_print', [
+            'title'   => 'Imprimir QR Code',
+            'codigos' => [$serial['serial']],
+        ]);
+    }
+
+    /**
+     * Página de impressão em lote — recebe uma lista de ids (query string
+     * "ids=1,2,3") e imprime o QR Code de cada um, usando os seriais já
+     * existentes (não gera nada novo).
+     */
+    public function qrCodeLote(): Response
+    {
+        if (!Rbac::check('estoque.listar')) {
+            return $this->redirect($this->baseUrl . '/dashboard');
+        }
+
+        $idsParam = $this->get('ids', '');
+        $codigosParam = $this->get('codigos', '');
+
+        $codigos = [];
+
+        if ($codigosParam !== '') {
+            // Impressão logo após gerar uma faixa — o backend já devolveu as
+            // strings geradas. Ainda assim, só imprime o que realmente está
+            // cadastrado (nunca texto arbitrário vindo da URL).
+            $solicitados = array_filter(array_map('trim', explode(',', (string)$codigosParam)));
+            $codigos = $this->service->filterExisting($solicitados);
+        } else {
+            $ids = array_filter(array_map('intval', explode(',', (string)$idsParam)));
+            foreach ($ids as $id) {
+                $serial = $this->service->find($id);
+                if ($serial) {
+                    $codigos[] = $serial['serial'];
+                }
+            }
+        }
+
+        if (empty($codigos)) {
+            $_SESSION['error'] = 'Nenhum código encontrado.';
+            return $this->redirect($this->baseUrl . '/estoque');
+        }
+
+        return $this->view('estoque/qrcode_print', [
+            'title'   => 'Imprimir QR Codes',
+            'codigos' => $codigos,
+        ]);
     }
 }

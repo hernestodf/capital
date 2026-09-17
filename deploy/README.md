@@ -74,3 +74,26 @@ mysql -u admin -p database < dump.sql
 - O script detecta arquivos modificados e envia apenas os necessários
 - Mostra progresso de upload
 - Trata erros de conexão automaticamente
+
+## CI/CD (GitHub Actions)
+
+O workflow `.github/workflows/ci-cd.yml` roda em todo push/PR para `main`:
+
+1. **Job `ci`** — `composer validate`, `composer install`, lint de sintaxe PHP
+   (`php -l`) em `src/`, `views/`, `config/`, `public/`, e `eslint` em `src/js/`.
+2. **Job `deploy`** — só roda em push direto para `main` e só se `ci` passar.
+   Chama `python3 deploy/deploy.py --upload` (modo não-interativo) usando
+   credenciais FTP vindas de **GitHub Secrets** (`FTP_HOST`, `FTP_PORT`,
+   `FTP_USER`, `FTP_PASS`, `FTP_PATH`), nunca do `.env` do repositório.
+
+Para rodar o deploy manualmente sem o menu interativo (ex: outro CI, cron):
+
+```bash
+python3 deploy/deploy.py --upload           # envia arquivos via FTP e sai
+python3 deploy/deploy.py --test-connection  # testa conexao FTP e sai
+```
+
+Configure os secrets em GitHub → Settings → Secrets and variables → Actions,
+com os mesmos valores que hoje estão no `.env` local (`FTP_HOST`, `FTP_PORT`,
+`FTP_USER`, `FTP_PASS`, `FTP_PATH`). O `.env` continua sendo usado apenas em
+execuções locais/interativas.

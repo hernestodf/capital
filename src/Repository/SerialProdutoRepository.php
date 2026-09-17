@@ -7,7 +7,7 @@ use App\Database\Connection;
 class SerialProdutoRepository extends BaseRepository
 {
     protected string $table = 'seriaisproduto';
-    protected array $fillable = ['id_produto', 'serial', 'status', 'motivo', 'status_devolucao'];
+    protected array $fillable = ['id_produto', 'serial', 'numero_serie', 'status', 'motivo', 'status_devolucao'];
 
     public function findByProduto(int $idProduto): array
     {
@@ -60,6 +60,27 @@ class SerialProdutoRepository extends BaseRepository
     }
 
     /**
+     * Verifica quais dos códigos informados já existem no banco (globalmente,
+     * qualquer produto). Usado para pré-visualizar antes de confirmar um lote.
+     * @param array $serials
+     * @return array lista dos códigos que já existem
+     */
+    public function findExisting(array $serials): array
+    {
+        $cleanSerials = array_values(array_unique(array_filter(array_map('trim', $serials))));
+        if (empty($cleanSerials)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($cleanSerials), '?'));
+        $stmt = Connection::get()->prepare(
+            "SELECT serial FROM {$this->table} WHERE serial IN ($placeholders)"
+        );
+        $stmt->execute($cleanSerials);
+        return $stmt->fetchAll(\PDO::FETCH_COLUMN);
+    }
+
+    /**
      * Insert multiple serials in batch for a product
      * @param int $idProduto Product ID
      * @param array $serials Array of serial numbers
@@ -90,26 +111,29 @@ class SerialProdutoRepository extends BaseRepository
             ];
         }
 
-        // Check for existing duplicates globally
-        $placeholders = implode(',', array_fill(0, count($cleanSerials), '?'));
-        $stmt = Connection::get()->prepare(
-            "SELECT serial FROM {$this->table} WHERE serial IN ($placeholders)"
-        );
-        $stmt->execute($cleanSerials);
-        $existing = $stmt->fetchAll(\PDO::FETCH_COLUMN);
-        
-        $toInsert = [];
-        foreach ($cleanSerials as $s) {
-            if (in_array($s, $existing)) {
-                $duplicates++;
-                $errors[] = sprintf('Código "%s" já existe em outro produto', $s);
-            } else {
-                $toInsert[] = $s;
-            }
-        }
+        $pdo = Connection::get();
+        $pdo->beginTransaction();
 
-        if (!empty($toInsert)) {
-            try {
+        try {
+            // Check for existing duplicates globally
+            $placeholders = implode(',', array_fill(0, count($cleanSerials), '?'));
+            $stmt = $pdo->prepare(
+                "SELECT serial FROM {$this->table} WHERE serial IN ($placeholders)"
+            );
+            $stmt->execute($cleanSerials);
+            $existing = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            $toInsert = [];
+            foreach ($cleanSerials as $s) {
+                if (in_array($s, $existing)) {
+                    $duplicates++;
+                    $errors[] = sprintf('Código "%s" já existe em outro produto', $s);
+                } else {
+                    $toInsert[] = $s;
+                }
+            }
+
+            if (!empty($toInsert)) {
                 // Build a bulk insert query: INSERT INTO table (id_produto, serial, status) VALUES (?, ?, ?), (?, ?, ?)
                 $valuesSql = [];
                 $params = [];
@@ -119,15 +143,21 @@ class SerialProdutoRepository extends BaseRepository
                     $params[] = $s;
                     $params[] = $status;
                 }
-                
+
                 $sql = "INSERT INTO {$this->table} (id_produto, serial, status) VALUES " . implode(', ', $valuesSql);
-                $stmt = Connection::get()->prepare($sql);
+                $stmt = $pdo->prepare($sql);
                 $stmt->execute($params);
-                
+
                 $success = count($toInsert);
-            } catch (\Exception $e) {
-                $errors[] = 'Erro ao salvar lote de códigos de barras: ' . $e->getMessage();
             }
+
+            $pdo->commit();
+        } catch (\Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $success = 0;
+            $errors[] = 'Erro ao salvar lote de códigos de barras: ' . $e->getMessage();
         }
 
         return [

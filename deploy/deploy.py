@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
 """
 NovoFramework - Deploy Script via FTP
-用法: python3 deploy.py
+Uso interativo: python3 deploy.py
+Uso nao-interativo (CI/CD): python3 deploy.py --upload | --test-connection
 
 Este script facilita o deploy do sistema para produção via FTP.
-As configurações são lidas do arquivo .env na raiz do projeto.
+As configurações são lidas do arquivo .env na raiz do projeto, com
+variáveis de ambiente (ex: secrets do GitHub Actions) tendo prioridade
+sobre o .env quando definidas — isso permite rodar em CI sem versionar
+credenciais.
 """
 
 import os
 import sys
+import argparse
 import ftputil
 import time
 from datetime import datetime
@@ -17,22 +22,29 @@ from datetime import datetime
 # LEITURA DO .ENV
 # ============================================================
 
+ENV_KEYS = ('FTP_HOST', 'FTP_PORT', 'FTP_USER', 'FTP_PASS', 'FTP_PATH',
+            'DB_LOCAL_NAME', 'DB_LOCAL_USER', 'DB_LOCAL_PASS')
+
 def load_env():
-    """Carrega configurações do arquivo .env"""
+    """Carrega configurações do .env (se existir) e sobrepõe com
+    variáveis de ambiente já definidas no processo (usado no CI, onde
+    as credenciais vêm de secrets em vez de um arquivo .env)."""
     env_file = os.path.join(os.path.dirname(__file__), '..', '.env')
-    
-    if not os.path.exists(env_file):
-        print("❌ Arquivo .env não encontrado!")
-        sys.exit(1)
-    
+
     config = {}
-    with open(env_file, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if line and not line.startswith('#') and '=' in line:
-                key, value = line.split('=', 1)
-                config[key.strip()] = value.strip()
-    
+    if os.path.exists(env_file):
+        with open(env_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    config[key.strip()] = value.strip()
+
+    # Secrets do ambiente (CI) sobrepoem o .env
+    for key in ENV_KEYS:
+        if os.environ.get(key):
+            config[key] = os.environ[key]
+
     return config
 
 # ============================================================
@@ -303,15 +315,29 @@ def show_menu():
 
 def main():
     """Função principal"""
+    parser = argparse.ArgumentParser(description='Deploy do Capital via FTP')
+    parser.add_argument('--upload', action='store_true',
+                         help='Envia arquivos via FTP e sai (nao-interativo, usado no CI/CD)')
+    parser.add_argument('--test-connection', action='store_true',
+                         help='Testa a conexao FTP e sai (nao-interativo, usado no CI/CD)')
+    args = parser.parse_args()
+
     # Carrega configurações
     config = load_env()
-    
+
     # Verifica se FTP está configurado
     if not config.get('FTP_HOST'):
-        print("\n⚠️  FTP não configurado no .env")
-        print("   Preencha os campos FTP_HOST, FTP_USER, FTP_PASS e FTP_PATH")
-        return
-    
+        print("\n⚠️  FTP não configurado (nem no .env, nem em variáveis de ambiente)")
+        print("   Preencha FTP_HOST, FTP_USER, FTP_PASS e FTP_PATH no .env,")
+        print("   ou defina-os como variáveis de ambiente/secrets (CI).")
+        sys.exit(1)
+
+    if args.upload:
+        sys.exit(0 if upload_files_ftp(config) else 1)
+
+    if args.test_connection:
+        sys.exit(0 if test_ftp_connection(config) else 1)
+
     while True:
         show_menu()
         choice = input("Escolha uma opção: ").strip()

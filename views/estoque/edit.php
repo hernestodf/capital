@@ -121,12 +121,17 @@ $locadoSelected = ($produto['pode_ser_locado'] ?? 'N') === 'S' ? 'S' : 'N';
 
         <!-- LISTA DE SERIAIS -->
         <div class="card">
-          <div class="card-head">
+          <div class="card-head" style="flex-wrap:wrap">
             <span class="card-title">Códigos de Barras</span>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn btn-sm btn-cyan" data-action="abrir-modal-serial">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                Novo
+            <div style="display:flex;gap:6px">
+              <button type="button" class="btn btn-icon-sm btn-purple" data-action="gerar-faixa" data-tooltip="Gerar Faixa + QR" data-tooltip-color="purple">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h7"/></svg>
+              </button>
+              <button type="button" class="btn btn-icon-sm btn-gray" id="btn-imprimir-selecionados" data-action="imprimir-selecionados" data-tooltip="Imprimir selecionados" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              </button>
+              <button type="button" class="btn btn-icon-sm btn-cyan" data-action="abrir-modal-serial" data-tooltip="Novo Código de Barras" data-tooltip-color="cyan">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
               </button>
             </div>
           </div>
@@ -145,8 +150,10 @@ $locadoSelected = ($produto['pode_ser_locado'] ?? 'N') === 'S' ? 'S' : 'N';
             <table style="width:100%;border-collapse:collapse">
               <thead>
                 <tr style="border-bottom:1px solid var(--bg-border);text-align:left">
+                  <th style="padding:10px;font-size:12px;color:var(--text-3)"><input type="checkbox" id="chk-all-seriais"></th>
                   <th style="padding:10px;font-size:12px;color:var(--text-3)">ID</th>
                   <th style="padding:10px;font-size:12px;color:var(--text-3)">Código de Barras</th>
+                  <th style="padding:10px;font-size:12px;color:var(--text-3)">Nº Série (fabricante)</th>
                   <th style="padding:10px;font-size:12px;color:var(--text-3)">Status</th>
                   <th style="padding:10px;font-size:12px;color:var(--text-3);text-align:right">Acoes</th>
                 </tr>
@@ -154,8 +161,10 @@ $locadoSelected = ($produto['pode_ser_locado'] ?? 'N') === 'S' ? 'S' : 'N';
               <tbody>
                 <?php foreach ($seriais as $s): ?>
                 <tr style="border-bottom:1px solid var(--bg-border)" data-id="<?= $s['id'] ?>">
+                  <td style="padding:8px"><input type="checkbox" class="chk-serial" value="<?= $s['id'] ?>"></td>
                   <td style="padding:8px;font-size:13px"><?= $s['id'] ?></td>
                   <td style="padding:8px;font-size:13px;font-weight:500"><?= htmlspecialchars($s['serial']) ?></td>
+                  <td style="padding:8px;font-size:13px"><?= htmlspecialchars($s['numero_serie'] ?? '-') ?></td>
                   <td style="padding:8px">
                     <?php
                     $badgeVariant = $s['status'] === 'ATIVO' ? 'green' : ($s['status'] === 'MANUTENCAO' ? 'yellow' : 'cyan');
@@ -163,8 +172,17 @@ $locadoSelected = ($produto['pode_ser_locado'] ?? 'N') === 'S' ? 'S' : 'N';
                     ?>
                   </td>
                   <td style="padding:8px;text-align:right">
-                    <button type="button" class="btn btn-sm btn-cyan" data-action="abrir-modal-serial" data-id="<?= $s['id'] ?>" data-serial="<?= htmlspecialchars($s['serial']) ?>" data-status="<?= $s['status'] ?>" data-motivo="<?= htmlspecialchars($s['motivo'] ?? '') ?>" style="margin-right:4px">Editar</button>
-                    <button type="button" class="btn btn-sm btn-red" data-action="excluir-serial" data-id="<?= $s['id'] ?>">Excluir</button>
+                    <div style="display:inline-flex;gap:6px">
+                      <button type="button" class="btn btn-icon-md btn-purple" data-action="reimprimir-qr" data-id="<?= $s['id'] ?>" data-tooltip="Reimprimir QR Code" data-tooltip-color="purple">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z"/></svg>
+                      </button>
+                      <button type="button" class="btn btn-icon-md btn-cyan" data-action="abrir-modal-serial" data-id="<?= $s['id'] ?>" data-serial="<?= htmlspecialchars($s['serial']) ?>" data-status="<?= $s['status'] ?>" data-motivo="<?= htmlspecialchars($s['motivo'] ?? '') ?>" data-numero-serie="<?= htmlspecialchars($s['numero_serie'] ?? '') ?>" data-tooltip="Editar" data-tooltip-color="cyan">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                      </button>
+                      <button type="button" class="btn btn-icon-md btn-red" data-action="excluir-serial" data-id="<?= $s['id'] ?>" data-tooltip="Excluir" data-tooltip-color="red">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 <?php endforeach; ?>
@@ -183,11 +201,34 @@ $locadoSelected = ($produto['pode_ser_locado'] ?? 'N') === 'S' ? 'S' : 'N';
         'title' => 'Adicionar Código de Barras',
         'subtitle' => 'Cadastrar novo código de barras para o produto',
         'body' => '<div class="fg"><div class="fl">Código de Barras</div><input type="text" id="modal-serial-serial" class="fi" placeholder="Ex: SN123456789"/></div>
+                   <div class="fg" style="margin-top:12px"><div class="fl">Nº de Série do Fabricante (opcional)</div><input type="text" id="modal-serial-numero-serie" class="fi" placeholder="Ex: impresso na etiqueta do fabricante"/></div>
                    <div class="fg" style="margin-top:12px"><div class="fl">Status</div><select id="modal-serial-status" class="fi" onchange="toggleMotivo()"><option value="ATIVO">Ativo</option><option value="MANUTENCAO">Manutencao</option><option value="VENDER">Vender</option></select></div>
                    <div class="fg" style="margin-top:12px;display:none" id="modal-serial-motivo-group"><div class="fl">Motivo (obrigatorio para manutencao)</div><input type="text" id="modal-serial-motivo" class="fi" placeholder="Motivo da manutencao"/></div>
                    <input type="hidden" id="modal-serial-id" value=""/>
                    <input type="hidden" id="modal-serial-produto-id" value="' . $produto['id'] . '"/>',
         'footer' => '<button class="btn btn-gray" data-action="close-modal" data-target="modal-serial">Cancelar</button><button class="btn btn-cyan" data-action="salvar-serial">Salvar</button>'
+    ]) ?>
+
+    <!-- MODAL: Gerar Faixa de Códigos + QR Code -->
+    <?= renderModal([
+        'id' => 'modal-gerar-faixa',
+        'variant' => 'form',
+        'title' => 'Gerar Faixa de Códigos',
+        'subtitle' => 'Gera uma sequência de códigos (ex: TV-5001 até TV-5009) e cadastra no estoque',
+        'body' => '<div class="fg"><div class="fl">Prefixo</div><input type="text" id="faixa-prefixo" class="fi" placeholder="Ex: TV"/></div>
+                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+                     <div class="fg"><div class="fl">Sequencial inicial</div><input type="number" id="faixa-inicial" class="fi" placeholder="5001"/></div>
+                     <div class="fg"><div class="fl">Sequencial final</div><input type="number" id="faixa-final" class="fi" placeholder="5009"/></div>
+                   </div>
+                   <div id="faixa-preview" style="margin-top:16px;display:none">
+                     <div class="fl">Pré-visualização</div>
+                     <div id="faixa-preview-resumo" style="font-size:13px;color:var(--text-3);margin-bottom:8px"></div>
+                     <div id="faixa-preview-lista" style="max-height:160px;overflow-y:auto;font-family:monospace;font-size:12px;background:var(--bg-2);border-radius:6px;padding:10px"></div>
+                   </div>
+                   <input type="hidden" id="faixa-produto-id" value="' . $produto['id'] . '"/>',
+        'footer' => '<button class="btn btn-gray" data-action="close-modal" data-target="modal-gerar-faixa">Cancelar</button>
+                     <button class="btn btn-purple" data-action="pre-visualizar-faixa" id="btn-pre-visualizar-faixa">Pré-visualizar</button>
+                     <button class="btn btn-green" data-action="confirmar-faixa" id="btn-confirmar-faixa" style="display:none">Gerar e cadastrar no estoque</button>'
     ]) ?>
 
     <!-- MODAL: Adicionar Seriais em Lote -->
@@ -220,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function() {
     'abrir-modal-serial': function(el) {
       const id = el.dataset.id;
       if (id) {
-        abrirModalSerial(id, el.dataset.serial, el.dataset.status, el.dataset.motivo);
+        abrirModalSerial(id, el.dataset.serial, el.dataset.status, el.dataset.motivo, el.dataset.numeroSerie);
       } else {
         abrirModalSerial();
       }
@@ -229,8 +270,146 @@ document.addEventListener('DOMContentLoaded', function() {
     'salvar-serial': function() { salvarSerial(); },
     'salvar-lote': function() { salvarLote(); },
     'excluir-serial': function(el) { const id = el.dataset.id; if (id) excluirSerial(id); },
+    'reimprimir-qr': function(el) { const id = el.dataset.id; if (id) window.open(BASE_URL + '/seriais/qrcode/' + id, '_blank'); },
+    'gerar-faixa': function() { abrirModalGerarFaixa(); },
+    'pre-visualizar-faixa': function() { preVisualizarFaixa(); },
+    'confirmar-faixa': function() { confirmarFaixa(); },
+    'imprimir-selecionados': function() { imprimirSelecionados(); },
+  });
+
+  const chkAll = document.getElementById('chk-all-seriais');
+  if (chkAll) {
+    chkAll.addEventListener('change', function() {
+      document.querySelectorAll('.chk-serial').forEach(function(c) { c.checked = chkAll.checked; });
+      atualizarBotaoImprimirSelecionados();
+    });
+  }
+  document.body.addEventListener('change', function(e) {
+    if (e.target.classList && e.target.classList.contains('chk-serial')) {
+      atualizarBotaoImprimirSelecionados();
+    }
   });
 });
+
+function atualizarBotaoImprimirSelecionados() {
+  const selecionados = document.querySelectorAll('.chk-serial:checked').length;
+  const btn = document.getElementById('btn-imprimir-selecionados');
+  if (btn) {
+    btn.disabled = selecionados === 0;
+    btn.setAttribute('data-tooltip', selecionados > 0 ? 'Imprimir selecionados (' + selecionados + ')' : 'Imprimir selecionados');
+  }
+}
+
+function imprimirSelecionados() {
+  const ids = Array.from(document.querySelectorAll('.chk-serial:checked')).map(function(c) { return c.value; });
+  if (ids.length === 0) return;
+  window.open(BASE_URL + '/seriais/qrcode-lote?ids=' + ids.join(','), '_blank');
+}
+
+function abrirModalGerarFaixa() {
+  document.getElementById('faixa-prefixo').value = '';
+  document.getElementById('faixa-inicial').value = '';
+  document.getElementById('faixa-final').value = '';
+  document.getElementById('faixa-preview').style.display = 'none';
+  document.getElementById('faixa-preview-lista').innerHTML = '';
+  document.getElementById('btn-pre-visualizar-faixa').style.display = 'inline-flex';
+  document.getElementById('btn-confirmar-faixa').style.display = 'none';
+  openModal('modal-gerar-faixa');
+}
+
+function lerFaixaForm() {
+  const prefixo = document.getElementById('faixa-prefixo').value.trim();
+  const inicial = document.getElementById('faixa-inicial').value.trim();
+  const final = document.getElementById('faixa-final').value.trim();
+
+  if (!prefixo) {
+    showToast('yellow', 'Atencao', 'Prefixo é obrigatório');
+    return null;
+  }
+  if (inicial === '' || final === '') {
+    showToast('yellow', 'Atencao', 'Sequencial inicial e final são obrigatórios');
+    return null;
+  }
+  if (parseInt(inicial, 10) > parseInt(final, 10)) {
+    showToast('yellow', 'Atencao', 'O sequencial inicial não pode ser maior que o final');
+    return null;
+  }
+
+  return { prefixo: prefixo, inicial: inicial, final: final };
+}
+
+function preVisualizarFaixa() {
+  const dados = lerFaixaForm();
+  if (!dados) return;
+
+  fetch(BASE_URL + '/seriais/generate-range', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: '_csrf_token=' + CSRF_TOKEN + '&prefixo=' + encodeURIComponent(dados.prefixo)
+        + '&inicial=' + dados.inicial + '&final=' + dados.final + '&preview=1'
+  })
+  .then(r => r.json())
+  .then(function(data) {
+    if (!data.success) {
+      showToast('red', 'Erro', data.message || 'Erro ao pré-visualizar faixa');
+      return;
+    }
+    const info = data.data;
+    let resumo = 'Serão gerados ' + info.total + ' código(s).';
+    if (info.existentes.length > 0) {
+      resumo += ' ⚠️ ' + info.existentes.length + ' já existe(m) e não serão duplicados: ' + info.existentes.join(', ');
+    }
+    document.getElementById('faixa-preview-resumo').textContent = resumo;
+    document.getElementById('faixa-preview-lista').innerHTML = info.codigos.map(function(c) {
+      const existe = info.existentes.indexOf(c) !== -1;
+      return '<div' + (existe ? ' style="color:var(--red);text-decoration:line-through"' : '') + '>' + escapeHtml(c) + '</div>';
+    }).join('');
+    document.getElementById('faixa-preview').style.display = 'block';
+    document.getElementById('btn-pre-visualizar-faixa').style.display = 'none';
+    document.getElementById('btn-confirmar-faixa').style.display = 'inline-flex';
+  })
+  .catch(() => showToast('red', 'Erro', 'Erro ao processar requisicao'));
+}
+
+function confirmarFaixa() {
+  const dados = lerFaixaForm();
+  if (!dados) return;
+
+  const btn = document.getElementById('btn-confirmar-faixa');
+  const textoOriginal = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Gerando...';
+
+  fetch(BASE_URL + '/seriais/generate-range', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&prefixo=' + encodeURIComponent(dados.prefixo)
+        + '&inicial=' + dados.inicial + '&final=' + dados.final
+  })
+  .then(r => r.json())
+  .then(function(data) {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+
+    if (!data.success) {
+      showToast('red', 'Erro', data.message || 'Erro ao gerar faixa');
+      return;
+    }
+
+    showToast('green', 'Sucesso', data.message);
+    closeModal('modal-gerar-faixa');
+
+    if (data.data.codigos && data.data.codigos.length > 0) {
+      window.open(BASE_URL + '/seriais/qrcode-lote?codigos=' + encodeURIComponent(data.data.codigos.join(',')), '_blank');
+    }
+    setTimeout(() => { window.location.reload(); }, 1500);
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.textContent = textoOriginal;
+    showToast('red', 'Erro', 'Erro ao processar requisicao');
+  });
+}
 
 // Currency mask for custo
 document.addEventListener('DOMContentLoaded', function() {
@@ -250,21 +429,23 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-function abrirModalSerial(id, serial, status, motivo) {
+function abrirModalSerial(id, serial, status, motivo, numeroSerie) {
   if (id) {
     document.getElementById('modal-serial-id').value = id;
     document.getElementById('modal-serial-serial').value = serial || '';
+    document.getElementById('modal-serial-numero-serie').value = numeroSerie || '';
     document.getElementById('modal-serial-status').value = status || 'ATIVO';
     document.getElementById('modal-serial-motivo').value = motivo || '';
     document.querySelector('#modal-serial .modal-title').textContent = 'Editar Código de Barras';
   } else {
     document.getElementById('modal-serial-id').value = '';
     document.getElementById('modal-serial-serial').value = '';
+    document.getElementById('modal-serial-numero-serie').value = '';
     document.getElementById('modal-serial-status').value = 'ATIVO';
     document.getElementById('modal-serial-motivo').value = '';
     document.querySelector('#modal-serial .modal-title').textContent = 'Adicionar Código de Barras';
   }
-  
+
   toggleMotivo();
   openModal('modal-serial');
 }
@@ -272,6 +453,7 @@ function abrirModalSerial(id, serial, status, motivo) {
 function salvarSerial() {
   const id = document.getElementById('modal-serial-id').value;
   const serial = document.getElementById('modal-serial-serial').value.trim();
+  const numeroSerie = document.getElementById('modal-serial-numero-serie').value.trim();
   const status = document.getElementById('modal-serial-status').value;
   const motivo = document.getElementById('modal-serial-motivo').value.trim();
   const produtoId = document.getElementById('modal-serial-produto-id').value;
@@ -291,7 +473,7 @@ function salvarSerial() {
     fetch(BASE_URL + '/seriais/update/' + id, {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: '_csrf_token=' + CSRF_TOKEN + '&serial=' + encodeURIComponent(serial) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
+      body: '_csrf_token=' + CSRF_TOKEN + '&serial=' + encodeURIComponent(serial) + '&numero_serie=' + encodeURIComponent(numeroSerie) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
     })
     .then(r => r.json())
     .then(function(data) {
@@ -309,7 +491,7 @@ function salvarSerial() {
     fetch(BASE_URL + '/seriais/store', {
       method: 'POST',
       headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&serial=' + encodeURIComponent(serial) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
+      body: '_csrf_token=' + CSRF_TOKEN + '&id_produto=' + produtoId + '&serial=' + encodeURIComponent(serial) + '&numero_serie=' + encodeURIComponent(numeroSerie) + '&status=' + status + '&motivo=' + encodeURIComponent(motivo)
     })
     .then(r => r.json())
     .then(function(data) {
