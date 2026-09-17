@@ -1,25 +1,36 @@
 <?php
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Writer\SvgWriter;
+use Picqer\Barcode\BarcodeGeneratorSVG;
+use Picqer\Barcode\BarcodeGenerator;
 
 /**
  * Usa SvgWriter (não PngWriter/GD) — o PngWriter deste ambiente (PHP 8.4 +
  * GD) trava com segmentation fault de forma intermitente ao gerar PNG,
  * confirmado em testes repetidos (com e sem Builder). SVG é vetorial, não
  * usa GD, e escala melhor para impressão em tamanho físico (cm).
+ *
+ * O barcode linear (Code128) usa o mesmo BarcodeGeneratorSVG (também livre
+ * de GD, mesmo motivo) para dar suporte a locais que só têm leitor comum
+ * de código de barras, sem leitor de QR.
  */
 
 /** @var string[] $codigos */
 $codigos = $codigos ?? [];
 
-$writer = new SvgWriter();
+$qrWriter = new SvgWriter();
+$barcodeGenerator = new BarcodeGeneratorSVG();
 
-$qrItems = array_map(function (string $codigo) use ($writer) {
+$qrItems = array_map(function (string $codigo) use ($qrWriter, $barcodeGenerator) {
     $qrCode = new QrCode(data: $codigo, size: 300, margin: 8);
-    $result = $writer->write($qrCode);
+    $qrResult = $qrWriter->write($qrCode);
+
+    $barcodeSvg = $barcodeGenerator->getBarcode($codigo, BarcodeGenerator::TYPE_CODE_128, 2, 60);
+
     return [
         'codigo' => $codigo,
-        'dataUri' => $result->getDataUri(),
+        'qrDataUri' => $qrResult->getDataUri(),
+        'barcodeDataUri' => 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg),
     ];
 }, $codigos);
 ?>
@@ -60,7 +71,7 @@ $qrItems = array_map(function (string $codigo) use ($writer) {
     max-width: 900px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(3.4cm, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(6.8cm, 1fr));
     gap: 0.4cm;
     background: #fff;
     padding: 0.4cm;
@@ -68,7 +79,7 @@ $qrItems = array_map(function (string $codigo) use ($writer) {
   }
 
   .qr-card {
-    width: 3cm;
+    width: 6.6cm;
     height: 3.7cm;
     display: flex;
     flex-direction: column;
@@ -77,10 +88,23 @@ $qrItems = array_map(function (string $codigo) use ($writer) {
     border: 1px solid #e2e8f0;
     padding: 0.1cm;
   }
-  .qr-card img {
+  .qr-card .codes-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3cm;
+  }
+  .qr-card .qr-img {
     width: 3cm;
     height: 3cm;
     display: block;
+    flex: none;
+  }
+  .qr-card .barcode-img {
+    width: 3.2cm;
+    height: 1.4cm;
+    display: block;
+    flex: none;
   }
   .qr-card .codigo {
     font-size: 11px;
@@ -117,7 +141,10 @@ $qrItems = array_map(function (string $codigo) use ($writer) {
   <div class="grid">
     <?php foreach ($qrItems as $item): ?>
       <div class="qr-card">
-        <img src="<?= $item['dataUri'] ?>" alt="QR <?= htmlspecialchars($item['codigo']) ?>">
+        <div class="codes-row">
+          <img class="qr-img" src="<?= $item['qrDataUri'] ?>" alt="QR <?= htmlspecialchars($item['codigo']) ?>">
+          <img class="barcode-img" src="<?= $item['barcodeDataUri'] ?>" alt="Código de barras <?= htmlspecialchars($item['codigo']) ?>">
+        </div>
         <div class="codigo"><?= htmlspecialchars($item['codigo']) ?></div>
       </div>
     <?php endforeach; ?>
